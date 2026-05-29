@@ -2,6 +2,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { loadAll } from './state.js';
 
+const BASE_URL = import.meta.env.BASE_URL;
+
 // ── DATA ──
 let PIPELINE, ELECTION, NEWS;
 
@@ -50,6 +52,26 @@ const STATUS_LIST   = ['Under Construction', 'Planning', 'Cancelled', 'Complete'
 const SECTOR_LIST   = ['transport','water','energy','health','housing','education','telecom','other'];
 const RISK_LIST     = ['extreme','high','medium','low','safe'];
 
+// ── TRANSPORT CORRIDORS ── (lat/lon pairs)
+const CORRIDORS = {
+  1:  { line: [ [-36.8442,174.7653],[-36.8479,174.7632],[-36.8540,174.7620],[-36.8688,174.7636] ] }, // City Rail Link
+  2:  { line: [ [-36.8479,174.7632],[-36.8600,174.7540],[-36.8850,174.7450],[-36.9600,174.7850],[-37.0082,174.7915] ] }, // Auckland Light Rail
+  3:  { line: [ [-36.8888,174.8753],[-36.9100,174.9000],[-36.9250,174.9200],[-36.9430,174.9100] ] }, // Eastern Busway
+  4:  { line: [ [-36.6190,174.7450],[-36.6200,174.7300],[-36.6200,174.7100],[-36.6200,174.6900] ] }, // Penlink
+  5:  { line: [ [-37.0000,174.8800],[-37.0300,174.9050],[-37.0700,174.9350] ] }, // Mill Road
+  6:  { line: [ [-37.5000,175.1350],[-37.5300,175.1500],[-37.5600,175.1650],[-37.6000,175.1800] ] }, // Waikato Expressway (Huntly)
+  7:  { line: [ [-37.6200,176.0350],[-37.6500,176.0700],[-37.6800,176.0950],[-37.7100,176.1100] ] }, // Tauranga Northern Link
+  15: { line: [ [-43.5000,172.6260],[-43.4750,172.6250],[-43.4580,172.6300] ] }, // Christchurch Northern Corridor
+  24: { line: [ [-37.7200,175.2500],[-37.7600,175.2200],[-37.8000,175.2300],[-37.8400,175.2900],[-37.8100,175.3600] ] }, // Hamilton Bypass
+  25: { line: [ [-40.7500,175.1400],[-40.6500,175.2000],[-40.5700,175.2800],[-40.4900,175.3400] ] }, // Ōtaki–N.Wellington
+  26: { line: [ [-36.5050,174.6820],[-36.4550,174.6700],[-36.4000,174.6700],[-36.3620,174.6750] ] }, // Pūhoi–Warkworth
+  32: { line: [ [-41.2950,174.0050],[-41.5100,173.9600],[-41.9000,173.9600],[-42.4000,173.6800],[-43.1000,172.7000],[-43.5310,172.6385] ] }, // South Island Rail
+  34: { line: [ [-36.3620,174.6750],[-36.1500,174.5800],[-35.9000,174.4200],[-35.8000,174.3900],[-35.7250,174.3240] ] }, // Northland RoNS
+  37: { line: [ [-41.2800,174.7800],[-41.2950,174.0050] ], dashArray: '10,7' }, // Cook Strait ferries
+  40: { line: [ [-36.3620,174.6750],[-36.2200,174.6300],[-36.1200,174.5700],[-36.0200,174.5200] ] }, // Ara Tūhono
+  42: { line: [ [-37.7000,176.1700],[-37.8200,176.2000],[-37.9500,176.2200],[-38.0700,176.1900],[-38.1368,176.2497] ] }, // BOP Expressway
+};
+
 // ── STATE ──
 let ST = {
   sectors:    new Set(SECTOR_LIST),
@@ -69,7 +91,7 @@ let ST = {
   },
 };
 
-let map, leafletMarkers = {};
+let map, leafletMarkers = {}, corridorLayers = {};
 let electorateLayer, maoriLayer, councilLayer, regionLayer, marginalLayer;
 
 // ─────────────────────────────────────────────
@@ -190,10 +212,66 @@ function renderMarkers() {
   });
 
   updateCount();
+  renderCorridors();
 }
 
 function markerColor(p) {
   return SECTOR_COLORS[p.sector] || '#6b7280';
+}
+
+// ─────────────────────────────────────────────
+// TRANSPORT CORRIDORS
+// ─────────────────────────────────────────────
+function renderCorridors() {
+  Object.values(corridorLayers).forEach(l => l && l.remove());
+  corridorLayers = {};
+
+  const visibleIds = new Set(filtered().map(p => p.id));
+
+  Object.entries(CORRIDORS).forEach(([idStr, corr]) => {
+    const id = parseInt(idStr);
+    if (!visibleIds.has(id)) return;
+
+    const p      = PIPELINE.find(x => x.id === id);
+    if (!p) return;
+
+    const col    = SECTOR_COLORS[p.sector] || '#3b82f6';
+    const isSel  = ST.selId === id;
+    const isUC   = p.status === 'Under Construction';
+    const isCan  = p.status === 'Cancelled';
+    const dimmed = ST.showRiskView && !['extreme','high'].includes(p.electionRisk);
+    const dash   = isCan ? '4,5' : (isUC ? null : (corr.dashArray || '9,6'));
+    const wt     = isSel ? 7 : (isUC ? 5 : 3.5);
+    const op     = dimmed ? 0.15 : (isCan ? 0.4 : (isSel ? 1.0 : 0.75));
+
+    // Shadow/glow behind selected corridor
+    if (isSel) {
+      corridorLayers[`${id}-shadow`] = L.polyline(corr.line, {
+        color: '#ffffff', weight: wt + 4, opacity: 0.5,
+        dashArray: dash, pane: 'electoratesPane',
+      }).addTo(map);
+    }
+
+    const line = L.polyline(corr.line, {
+      color: col, weight: wt, opacity: op,
+      dashArray: dash, pane: 'markersPane',
+      lineCap: 'round', lineJoin: 'round',
+    }).addTo(map);
+
+    line.bindTooltip(
+      `<b>${p.name}</b><br>${p.status} · ${fmtCost(p.estimatedCost)}`,
+      { className: 'stn-tooltip', sticky: true }
+    );
+    line.on('click', () => {
+      ST.selId = id;
+      renderMarkers();
+      buildProjList();
+      showDetail(p);
+      updateHash();
+    });
+
+    corridorLayers[id] = line;
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -377,22 +455,49 @@ function toggleLayer(name) {
   }
 }
 
+// Strip diacritics + normalize dashes for fuzzy electorate name matching
+function normElect(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[–—]/g,'-').trim();
+}
+
+const ELECT_RENAME = {
+  'helensville':           'Kaipara ki Mahurangi',
+  'hunua':                 'Takanini',
+  'rimutaka':              'Remutaka',
+  'kaikoura':              'Kaikōura',
+  'otaki':                 'Ōtaki',
+  'rangitikei':            'Rangitīkei',
+  'tamaki':                'Tāmaki',
+  'taranaki-king country': 'Taranaki–King Country',
+  'whangarei':             'Whangārei',
+  'dunedin south':         'Dunedin',
+};
+
 async function renderElectorateLayer() {
   if (electorateLayer) { electorateLayer.remove(); electorateLayer = null; }
+  const leg = document.getElementById('elec-legend');
   if (!ST.layers.electorates || !ELECTION) {
-    const leg = document.getElementById('elec-legend');
     if (leg) leg.classList.remove('show');
     return;
   }
 
   const results = ELECTION.electorates || {};
-  const generalEls = Object.entries(results).filter(([, v]) => v.type === 'general');
 
-  // Try Stats NZ public GeoJSON for actual polygon boundaries
+  // Build normalised lookup of election result keys
+  const normKeys = {};
+  Object.keys(results).forEach(k => { normKeys[normElect(k)] = k; });
+
+  function matchElect(geoName) {
+    if (results[geoName]) return geoName;
+    const n = normElect(geoName);
+    if (ELECT_RENAME[n]) return ELECT_RENAME[n];
+    return normKeys[n] || null;
+  }
+
+  // Load bundled GeoJSON (252 KB, served locally)
   let geojsonData = null;
   try {
-    const r = await fetch('https://datafinder.stats.govt.nz/layer/104268/data.geojson',
-      { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(`${BASE_URL}data/electorates-general.geojson`);
     if (r.ok) geojsonData = await r.json();
   } catch (_) {}
 
@@ -400,21 +505,29 @@ async function renderElectorateLayer() {
     electorateLayer = L.geoJSON(geojsonData, {
       pane: 'electoratesPane',
       style: feature => {
-        const name = feature.properties.GED_NAME || feature.properties.name || '';
-        const data = results[name] || {};
-        return { fillColor: PARTY_COLORS[data.party] || '#888888', color: '#ffffff', weight: 1.5, fillOpacity: 0.38 };
+        const matched = matchElect(feature.properties.name || '');
+        const data    = matched ? results[matched] : {};
+        const col     = PARTY_COLORS[data?.party] || '#aaaaaa';
+        return { fillColor: col, color: '#ffffff', weight: 0.8, fillOpacity: 0.42 };
       },
       onEachFeature: (feature, layer) => {
-        const name = feature.properties.GED_NAME || feature.properties.name || '';
-        const data = results[name] || {};
-        if (data.mp) layer.bindTooltip(
-          `<b>${name}</b><br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%`,
+        const geoName = feature.properties.name || '';
+        const matched = matchElect(geoName);
+        const data    = matched ? results[matched] : {};
+        const isMarg  = (data.margin || 99) < 5;
+        layer.bindTooltip(
+          data.mp
+            ? `<b>${geoName}</b>${isMarg ? ' ⚡' : ''}<br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%`
+            : `<b>${geoName}</b>`,
           { className: 'stn-tooltip' }
         );
+        layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.65, weight: 1.5 }); });
+        layer.on('mouseout',  function() { this.setStyle({ fillOpacity: 0.42, weight: 0.8 }); });
       },
     }).addTo(map);
   } else {
     // Fallback: centroid dots coloured by winning party
+    const generalEls = Object.entries(results).filter(([, v]) => v.type === 'general');
     electorateLayer = L.layerGroup(
       generalEls.map(([name, data]) => {
         const c = ELECTORATE_CENTROIDS[name];
@@ -422,12 +535,10 @@ async function renderElectorateLayer() {
         const col    = PARTY_COLORS[data.party] || '#888888';
         const isMarg = (data.margin || 99) < 5;
         return L.circleMarker([c[0], c[1]], {
-          radius:      isMarg ? 13 : 10,
-          fillColor:   col,
-          color:       isMarg ? '#FFB020' : '#ffffff',
-          weight:      isMarg ? 3 : 1.5,
-          fillOpacity: 0.82,
-          pane:        'electoratesPane',
+          radius: isMarg ? 13 : 10, fillColor: col,
+          color: isMarg ? '#FFB020' : '#ffffff',
+          weight: isMarg ? 3 : 1.5, fillOpacity: 0.82,
+          pane: 'electoratesPane',
         }).bindTooltip(
           `<b>${name}</b><br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%${isMarg ? ' ⚡' : ''}`,
           { className: 'stn-tooltip' }
@@ -437,8 +548,8 @@ async function renderElectorateLayer() {
   }
 
   // Party legend
-  const leg = document.getElementById('elec-legend');
   if (leg) {
+    const generalEls = Object.entries(results).filter(([, v]) => v.type === 'general');
     const counts = {};
     generalEls.forEach(([, d]) => { counts[d.party] = (counts[d.party] || 0) + 1; });
     const rows = Object.entries(counts).sort((a, b) => b[1] - a[1])
