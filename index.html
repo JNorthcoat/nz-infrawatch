@@ -7,7 +7,7 @@
   <meta name="description" content="Track New Zealand's infrastructure pipeline. See what's being built, where, and what's at risk if the government changes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="/src/styles/main.css">
 </head>
@@ -108,21 +108,7 @@
   <div id="map-wrap">
     <div id="map"></div>
 
-    <!-- Election simulator panel -->
-    <div id="sim-panel">
-      <div id="sim-header">
-        <span>🗳 2026 Election Simulator</span>
-        <button onclick="toggleSimPanel()" id="sim-toggle-btn">Hide</button>
-      </div>
-      <div id="sim-body">
-        <div class="sim-note">Adjust party vote — see how Parliament changes</div>
-        <div id="sim-sliders"></div>
-        <div id="sim-result"></div>
-        <div id="sim-coalition"></div>
-        <button class="sim-reset" onclick="resetSim()">Reset to 2023</button>
-      </div>
-    </div>
-    <button id="sim-open-btn" onclick="toggleSimPanel()" style="display:none">🗳 Simulator</button>
+    <div id="elec-legend"></div>
   </div>
 
   <!-- RIGHT PANEL — project detail -->
@@ -170,7 +156,6 @@
       <h3>Methodology</h3>
       <p><strong>Project markers</strong> are sized proportional to estimated cost. Location is the project's declared region centroid unless a precise location is known.</p>
       <p><strong>Election risk tags</strong> are editorial assessments based on publicly available party policy, funding status, and project phase — they are not predictions. Projects are tagged Extreme, High, Medium, Low, or Safe based on vulnerability to government change.</p>
-      <p><strong>Election simulator</strong> applies uniform national swing to 2023 party vote results and recalculates list seats using the Sainte-Laguë method. Electorate seat winners are estimated from swung candidate votes. This is an illustrative model — actual MMP results depend on many local factors.</p>
       <p><strong>Council amalgamation:</strong> NZ announced regional council abolition and potential TA mergers in May 2026. Current boundaries shown reflect pre-restructure councils.</p>
       <h3>Attribution</h3>
       <p>National Infrastructure Pipeline data produced by <a href="https://tewaihanga.govt.nz" target="_blank" rel="noopener">Te Waihanga</a> under CC BY 4.0.</p>

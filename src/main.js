@@ -71,18 +71,6 @@ let ST = {
 
 let map, leafletMarkers = {};
 let electorateLayer, maoriLayer, councilLayer, regionLayer, marginalLayer;
-let simVisible = true;
-
-// ── SIM STATE ──
-let SIM = {
-  National:       38.06,
-  Labour:         26.91,
-  Green:          11.60,
-  ACT:            8.64,
-  'NZ First':     6.08,
-  'Te Pāti Māori': 3.08,
-};
-const SIM_BASE = { ...SIM };
 
 // ─────────────────────────────────────────────
 // BOOT
@@ -97,7 +85,6 @@ export async function _boot() {
   buildSectorBtns();
   buildStatusBtns();
   buildRiskBtns();
-  buildSimSliders();
   renderMarkers();
   buildProjList();
   updateCount();
@@ -108,8 +95,7 @@ export async function _boot() {
     applyFilters, toggleLayer, toggleRiskView,
     toggleMobileNav, toggleMobileSidebar, dismissBanner,
     openNews, openSources, closeModal,
-    toggleSimPanel, resetSim, onValueSlider, onSearch,
-    selFromList,
+    onValueSlider, onSearch, selFromList,
   });
 }
 
@@ -391,43 +377,76 @@ function toggleLayer(name) {
   }
 }
 
-function renderElectorateLayer() {
+async function renderElectorateLayer() {
   if (electorateLayer) { electorateLayer.remove(); electorateLayer = null; }
-  if (!ST.layers.electorates || !ELECTION) return;
+  if (!ST.layers.electorates || !ELECTION) {
+    const leg = document.getElementById('elec-legend');
+    if (leg) leg.classList.remove('show');
+    return;
+  }
 
   const results = ELECTION.electorates || {};
   const generalEls = Object.entries(results).filter(([, v]) => v.type === 'general');
 
-  // Minimal synthetic GeoJSON from known electorate centroids
-  const features = generalEls.map(([name, data]) => {
-    const c = ELECTORATE_CENTROIDS[name];
-    if (!c) return null;
-    return {
-      type: 'Feature',
-      properties: { name, ...data },
-      geometry: {
-        type: 'Point',
-        coordinates: [c[1], c[0]],
-      },
-    };
-  }).filter(Boolean);
+  // Try Stats NZ public GeoJSON for actual polygon boundaries
+  let geojsonData = null;
+  try {
+    const r = await fetch('https://datafinder.stats.govt.nz/layer/104268/data.geojson',
+      { signal: AbortSignal.timeout(5000) });
+    if (r.ok) geojsonData = await r.json();
+  } catch (_) {}
 
-  electorateLayer = L.layerGroup(features.map(f => {
-    const data  = f.properties;
-    const col   = PARTY_COLORS[data.party] || '#888';
-    const lat   = f.geometry.coordinates[1];
-    const lon   = f.geometry.coordinates[0];
-    return L.circleMarker([lat, lon], {
-      radius: 10,
-      fillColor: col,
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.8,
+  if (geojsonData?.features?.length) {
+    electorateLayer = L.geoJSON(geojsonData, {
       pane: 'electoratesPane',
-    }).bindTooltip(`<b>${f.properties.name}</b><br>${data.mp}<br>${data.party} · ${data.margin?.toFixed(1)}% margin`, {
-      className: 'stn-tooltip',
-    });
-  })).addTo(map);
+      style: feature => {
+        const name = feature.properties.GED_NAME || feature.properties.name || '';
+        const data = results[name] || {};
+        return { fillColor: PARTY_COLORS[data.party] || '#888888', color: '#ffffff', weight: 1.5, fillOpacity: 0.38 };
+      },
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.GED_NAME || feature.properties.name || '';
+        const data = results[name] || {};
+        if (data.mp) layer.bindTooltip(
+          `<b>${name}</b><br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%`,
+          { className: 'stn-tooltip' }
+        );
+      },
+    }).addTo(map);
+  } else {
+    // Fallback: centroid dots coloured by winning party
+    electorateLayer = L.layerGroup(
+      generalEls.map(([name, data]) => {
+        const c = ELECTORATE_CENTROIDS[name];
+        if (!c) return null;
+        const col    = PARTY_COLORS[data.party] || '#888888';
+        const isMarg = (data.margin || 99) < 5;
+        return L.circleMarker([c[0], c[1]], {
+          radius:      isMarg ? 13 : 10,
+          fillColor:   col,
+          color:       isMarg ? '#FFB020' : '#ffffff',
+          weight:      isMarg ? 3 : 1.5,
+          fillOpacity: 0.82,
+          pane:        'electoratesPane',
+        }).bindTooltip(
+          `<b>${name}</b><br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%${isMarg ? ' ⚡' : ''}`,
+          { className: 'stn-tooltip' }
+        );
+      }).filter(Boolean)
+    ).addTo(map);
+  }
+
+  // Party legend
+  const leg = document.getElementById('elec-legend');
+  if (leg) {
+    const counts = {};
+    generalEls.forEach(([, d]) => { counts[d.party] = (counts[d.party] || 0) + 1; });
+    const rows = Object.entries(counts).sort((a, b) => b[1] - a[1])
+      .map(([p, n]) => `<div class="legend-row"><span class="legend-dot" style="background:${PARTY_COLORS[p]||'#888'}"></span>${p}<span style="color:var(--dim);margin-left:auto;padding-left:8px">${n}</span></div>`)
+      .join('');
+    leg.innerHTML = `<div style="font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;text-transform:uppercase">2023 Result</div>${rows}`;
+    leg.classList.add('show');
+  }
 }
 
 function renderMaoriLayer() {
@@ -534,157 +553,6 @@ function toggleRiskView() {
       `;
     }
   }
-}
-
-// ─────────────────────────────────────────────
-// MMP ELECTION SIMULATOR
-// ─────────────────────────────────────────────
-function buildSimSliders() {
-  const el = document.getElementById('sim-sliders');
-  if (!el) return;
-
-  el.innerHTML = Object.entries(SIM).map(([party, pct]) => {
-    const col = PARTY_COLORS[party] || '#888';
-    return `
-      <div class="sim-slider-row">
-        <span class="sim-party-label" style="color:${col}">${party}</span>
-        <input type="range" min="0" max="60" step="0.5" value="${pct}"
-          id="sim-${party.replace(/\s/g,'_')}"
-          oninput="onSimSlider('${party}', parseFloat(this.value))"
-          style="accent-color:${col}">
-        <span class="sim-pct" id="simpct-${party.replace(/\s/g,'_')}">${pct.toFixed(1)}%</span>
-      </div>
-    `;
-  }).join('');
-
-  window.onSimSlider = (party, val) => {
-    SIM[party] = val;
-    document.getElementById(`simpct-${party.replace(/\s/g,'_')}`).textContent = val.toFixed(1) + '%';
-    runSim();
-  };
-
-  runSim();
-}
-
-function runSim() {
-  // Sainte-Laguë MMP allocation
-  const TOTAL_SEATS    = 120;
-  const ELECTORATE_SEATS = 72;
-  const LIST_SEATS     = TOTAL_SEATS - ELECTORATE_SEATS;
-  const THRESHOLD      = 5.0;
-
-  // Total vote for normalisation
-  const totalVote = Object.values(SIM).reduce((s, v) => s + v, 0);
-  const normalised = Object.fromEntries(
-    Object.entries(SIM).map(([p, v]) => [p, (v / totalVote) * 100])
-  );
-
-  // Determine eligible parties (≥5% or won electorate seat)
-  const electionSeats = ELECTION?.national?.seats || {};
-  const eligible = Object.keys(normalised).filter(p =>
-    normalised[p] >= THRESHOLD || (electionSeats[p] > 0)
-  );
-
-  // Estimate electorate wins using swing
-  const baseSeats = Object.fromEntries(Object.keys(SIM).map(p => [p, 0]));
-  Object.entries(ELECTION?.electorates || {}).forEach(([, data]) => {
-    const winner = estimateElectorateWinner(data, normalised);
-    if (winner) baseSeats[winner] = (baseSeats[winner] || 0) + 1;
-  });
-
-  // Sainte-Laguë list seat allocation
-  const listSeats = Object.fromEntries(eligible.map(p => [p, baseSeats[p] || 0]));
-  for (let i = 0; i < LIST_SEATS; i++) {
-    let best = null, bestQ = -1;
-    eligible.forEach(p => {
-      if (!eligible.includes(p)) return;
-      const q = normalised[p] / (2 * (listSeats[p] || 0) + 1);
-      if (q > bestQ) { bestQ = q; best = p; }
-    });
-    if (best) listSeats[best]++;
-  }
-
-  // Handle overhang
-  Object.keys(baseSeats).forEach(p => {
-    if ((baseSeats[p] || 0) > (listSeats[p] || 0)) {
-      listSeats[p] = baseSeats[p];
-    }
-  });
-
-  const result = document.getElementById('sim-result');
-  const coalition = document.getElementById('sim-coalition');
-  if (!result || !coalition) return;
-
-  const sorted = Object.entries(listSeats)
-    .filter(([, s]) => s > 0)
-    .sort((a, b) => b[1] - a[1]);
-  const total = sorted.reduce((s, [, v]) => s + v, 0);
-
-  result.innerHTML = `
-    <div class="sim-seat-bar">
-      ${sorted.map(([p, s]) => `<div style="width:${(s/total*100).toFixed(1)}%;background:${PARTY_COLORS[p]||'#888'}" title="${p}: ${s}"></div>`).join('')}
-    </div>
-    ${sorted.map(([p, s]) => `
-      <div class="sim-seat-row">
-        <span style="color:${PARTY_COLORS[p]||'#888'}">${p}</span>
-        <span style="font-family:var(--mono)">${s} seats</span>
-      </div>
-    `).join('')}
-    <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;font-weight:700">Total: ${total} seats</div>
-  `;
-
-  // Coalition analysis
-  const natBlock  = (listSeats['National'] || 0) + (listSeats['ACT'] || 0) + (listSeats['NZ First'] || 0);
-  const labBlock  = (listSeats['Labour'] || 0) + (listSeats['Green'] || 0) + (listSeats['Te Pāti Māori'] || 0);
-  const majority  = Math.ceil(total / 2) + 1;
-
-  if (natBlock >= majority) {
-    coalition.className = 'coalition-nat';
-    coalition.textContent = `🔵 National-led government (${natBlock} seats) — Nat+ACT${listSeats['NZ First'] ? '+NZF' : ''}`;
-  } else if (labBlock >= majority) {
-    coalition.className = 'coalition-lab';
-    coalition.textContent = `🔴 Labour-led government (${labBlock} seats) — Lab+Green${listSeats['Te Pāti Māori'] ? '+TPM' : ''}`;
-  } else {
-    coalition.className = 'coalition-hung';
-    coalition.textContent = `⚠️ Hung Parliament — no clear majority (need ${majority})`;
-  }
-}
-
-function estimateElectorateWinner(data, nationalPcts) {
-  if (!data.partyVote) return data.party;
-  const base2023 = data.partyVote;
-  const base2023national = ELECTION?.national?.partyVote || {};
-  let best = null, bestVote = -1;
-  Object.entries(base2023).forEach(([p, baseLocal]) => {
-    const baseNational = base2023national[p] || baseLocal;
-    const swing = (nationalPcts[p] || 0) - baseNational;
-    const adjusted = baseLocal + swing * 0.6;
-    if (adjusted > bestVote) { bestVote = adjusted; best = p; }
-  });
-  return best;
-}
-
-function resetSim() {
-  Object.assign(SIM, SIM_BASE);
-  Object.entries(SIM).forEach(([party, val]) => {
-    const slider = document.getElementById(`sim-${party.replace(/\s/g,'_')}`);
-    const label  = document.getElementById(`simpct-${party.replace(/\s/g,'_')}`);
-    if (slider) slider.value = val;
-    if (label)  label.textContent = val.toFixed(1) + '%';
-  });
-  runSim();
-}
-
-function toggleSimPanel() {
-  simVisible = !simVisible;
-  const body = document.getElementById('sim-body');
-  const btn  = document.getElementById('sim-toggle-btn');
-  const openBtn = document.getElementById('sim-open-btn');
-  const panel   = document.getElementById('sim-panel');
-  if (body) body.style.display = simVisible ? 'block' : 'none';
-  if (btn)  btn.textContent = simVisible ? 'Hide' : 'Show';
-  if (panel)   panel.style.display = simVisible ? 'block' : 'none';
-  if (openBtn) openBtn.style.display = simVisible ? 'none' : 'block';
 }
 
 // ─────────────────────────────────────────────
