@@ -1,0 +1,26 @@
+{
+  "name": "nz-infrawatch",
+  "version": "1.0.0",
+  "description": "New Zealand infrastructure tracking dashboard",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "process-pipeline": "node scripts/process-pipeline.mjs",
+    "process-elections": "node scripts/process-elections.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JNorthcoat/nz-infrawatch.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  }
+}

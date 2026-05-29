@@ -1,0 +1,874 @@
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { loadAll } from './state.js';
+
+// ── DATA ──
+let PIPELINE, ELECTION, NEWS;
+
+// ── CONSTANTS ──
+const PARTY_COLORS = {
+  'National':    '#00529F',
+  'Labour':      '#D82A20',
+  'Green':       '#098137',
+  'ACT':         '#C8A800',
+  'NZ First':    '#555555',
+  'Te Pāti Māori': '#B2001A',
+  'TOP':         '#09B1A3',
+};
+
+const SECTOR_COLORS = {
+  transport:     '#3b82f6',
+  water:         '#06b6d4',
+  education:     '#8b5cf6',
+  health:        '#ef4444',
+  housing:       '#f97316',
+  energy:        '#22c55e',
+  telecom:       '#6366f1',
+  other:         '#6b7280',
+};
+
+const SECTOR_ICONS = {
+  transport: '🚇',
+  water:     '💧',
+  education: '🎓',
+  health:    '🏥',
+  housing:   '🏘',
+  energy:    '⚡',
+  telecom:   '📡',
+  other:     '🏗',
+};
+
+const RISK_CONFIG = {
+  extreme: { label: '🔴 EXTREME', cls: 'risk-extreme', color: '#DC2626' },
+  high:    { label: '🟠 HIGH',    cls: 'risk-high',    color: '#EA580C' },
+  medium:  { label: '🟡 MEDIUM', cls: 'risk-medium',  color: '#D97706' },
+  low:     { label: '🟢 LOW',    cls: 'risk-low',     color: '#16A34A' },
+  safe:    { label: '⚪ SAFE',   cls: 'risk-safe',    color: '#6B7280' },
+};
+
+const STATUS_LIST   = ['Under Construction', 'Planning', 'Cancelled', 'Complete'];
+const SECTOR_LIST   = ['transport','water','energy','health','housing','education','telecom','other'];
+const RISK_LIST     = ['extreme','high','medium','low','safe'];
+
+// ── STATE ──
+let ST = {
+  sectors:    new Set(SECTOR_LIST),
+  statuses:   new Set(STATUS_LIST),
+  risks:      new Set(RISK_LIST),
+  region:     '',
+  minValue:   0,
+  searchQ:    '',
+  selId:      null,
+  showRiskView: false,
+  layers: {
+    electorates: false,
+    maori:       false,
+    councils:    false,
+    regions:     false,
+    marginal:    false,
+  },
+};
+
+let map, leafletMarkers = {};
+let electorateLayer, maoriLayer, councilLayer, regionLayer, marginalLayer;
+let simVisible = true;
+
+// ── SIM STATE ──
+let SIM = {
+  National:       38.06,
+  Labour:         26.91,
+  Green:          11.60,
+  ACT:            8.64,
+  'NZ First':     6.08,
+  'Te Pāti Māori': 3.08,
+};
+const SIM_BASE = { ...SIM };
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+export async function _boot() {
+  const data = await loadAll();
+  PIPELINE = data.PIPELINE;
+  ELECTION = data.ELECTION;
+  NEWS      = data.NEWS;
+
+  initMap();
+  buildSectorBtns();
+  buildStatusBtns();
+  buildRiskBtns();
+  buildSimSliders();
+  renderMarkers();
+  buildProjList();
+  updateCount();
+  buildNews();
+  restoreFromHash();
+
+  Object.assign(window, {
+    applyFilters, toggleLayer, toggleRiskView,
+    toggleMobileNav, toggleMobileSidebar, dismissBanner,
+    openNews, openSources, closeModal,
+    toggleSimPanel, resetSim, onValueSlider, onSearch,
+    selFromList,
+  });
+}
+
+// ─────────────────────────────────────────────
+// MAP
+// ─────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', {
+    center: [-41.0, 174.0],
+    zoom: 6,
+    minZoom: 5,
+    maxZoom: 18,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
+  }).addTo(map);
+
+  // Panes for z-ordering
+  map.createPane('regionsPane').style.zIndex    = 300;
+  map.createPane('councilsPane').style.zIndex   = 310;
+  map.createPane('electoratesPane').style.zIndex= 400;
+  map.createPane('markersPane').style.zIndex    = 650;
+}
+
+// ─────────────────────────────────────────────
+// FILTERING
+// ─────────────────────────────────────────────
+function filtered() {
+  const q = ST.searchQ.toLowerCase();
+  return PIPELINE.filter(p => {
+    if (!ST.sectors.has(p.sector)) return false;
+    if (!ST.statuses.has(p.status)) return false;
+    if (!ST.risks.has(p.electionRisk || 'safe')) return false;
+    if (ST.region && p.region !== ST.region) return false;
+    if (p.estimatedCost < ST.minValue) return false;
+    if (q) {
+      const hay = `${p.name} ${p.org} ${p.region} ${p.sector} ${p.status}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ─────────────────────────────────────────────
+// MARKERS
+// ─────────────────────────────────────────────
+function markerRadius(cost) {
+  return Math.max(8, Math.min(40, Math.sqrt(cost / 100) * 2.5));
+}
+
+function renderMarkers() {
+  // Clear existing
+  Object.values(leafletMarkers).forEach(m => m && m.remove && m.remove());
+  leafletMarkers = {};
+
+  const projects = filtered();
+
+  projects.forEach(p => {
+    if (!p.lat || !p.lon) return;
+    const col  = markerColor(p);
+    const r    = markerRadius(p.estimatedCost);
+    const isSel = ST.selId === p.id;
+    const dimmed = ST.showRiskView && !['extreme','high'].includes(p.electionRisk);
+
+    const m = L.circleMarker([p.lat, p.lon], {
+      radius:      isSel ? r + 3 : r,
+      fillColor:   col,
+      color:       '#ffffff',
+      weight:      isSel ? 3 : 2,
+      fillOpacity: dimmed ? 0.15 : (isSel ? 0.95 : 0.55),
+      opacity:     dimmed ? 0.3 : 1,
+      pane:        'markersPane',
+    }).addTo(map);
+
+    m.bindTooltip(`<b>${p.name}</b><br>${fmtCost(p.estimatedCost)} · ${p.region}`, {
+      className: 'stn-tooltip', direction: 'top', offset: [0, -r],
+    });
+
+    m.on('click', () => {
+      ST.selId = p.id;
+      renderMarkers();
+      buildProjList();
+      showDetail(p);
+      updateHash();
+    });
+
+    leafletMarkers[p.id] = m;
+  });
+
+  updateCount();
+}
+
+function markerColor(p) {
+  return SECTOR_COLORS[p.sector] || '#6b7280';
+}
+
+// ─────────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────────
+function showDetail(p) {
+  const placeholder = document.getElementById('detail-placeholder');
+  const content     = document.getElementById('detail-content');
+  if (!placeholder || !content) return;
+  placeholder.style.display = 'none';
+  content.style.display = 'block';
+
+  const risk = RISK_CONFIG[p.electionRisk] || RISK_CONFIG.safe;
+  const relNews = (NEWS || []).filter(a => a.projectIds?.includes(p.id));
+
+  content.innerHTML = `
+    <h2>${p.name}</h2>
+    <span class="risk-badge-lg ${risk.cls}">${risk.label}</span>
+    <div style="margin-bottom:10px">
+      <div class="detail-row"><span class="detail-key">Organisation</span><span class="detail-val">${p.org}</span></div>
+      <div class="detail-row"><span class="detail-key">Sector</span><span class="detail-val">${SECTOR_ICONS[p.sector] || ''} ${cap(p.sector)}</span></div>
+      <div class="detail-row"><span class="detail-key">Region</span><span class="detail-val">${p.region}</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${p.status}</span></div>
+      <div class="detail-row"><span class="detail-key">Funding</span><span class="detail-val">${p.fundingStatus}</span></div>
+      <div class="detail-row"><span class="detail-key">Est. Cost</span><span class="detail-val" style="font-family:var(--mono)">${fmtCost(p.estimatedCost)}</span></div>
+    </div>
+    ${p.desc ? `<div class="detail-desc">${p.desc}</div>` : ''}
+    ${p.riskRationale ? `<div class="detail-desc" style="border-left:3px solid ${risk.color}"><b>Election risk:</b> ${p.riskRationale}</div>` : ''}
+    ${relNews.length ? `
+      <div class="sb-label" style="margin:10px 0 6px">RELATED NEWS</div>
+      ${relNews.slice(0,3).map(a => `
+        <a href="${a.url}" target="_blank" rel="noopener" style="display:block;text-decoration:none">
+          <div class="news-item" style="margin-bottom:6px">
+            <div class="news-headline" style="font-size:11px">${a.headline}</div>
+            <div class="news-meta">${a.source} · ${a.date}</div>
+          </div>
+        </a>
+      `).join('')}
+    ` : ''}
+    <button class="detail-share" onclick="copyShareLink(${p.id})">🔗 Share this project</button>
+  `;
+  window.copyShareLink = (id) => {
+    const url = `${location.origin}${location.pathname}#p=${id}`;
+    navigator.clipboard.writeText(url).then(() => alert('Link copied!'));
+  };
+}
+
+// ─────────────────────────────────────────────
+// PROJECT LIST
+// ─────────────────────────────────────────────
+function buildProjList() {
+  const el = document.getElementById('proj-list');
+  if (!el) return;
+  const projects = filtered().sort((a, b) => b.estimatedCost - a.estimatedCost);
+
+  if (!projects.length) {
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--dim);font-size:12px">No projects match filters</div>';
+    return;
+  }
+
+  el.innerHTML = projects.map(p => {
+    const risk  = RISK_CONFIG[p.electionRisk] || RISK_CONFIG.safe;
+    const isSel = ST.selId === p.id;
+    return `
+      <div class="proj-item${isSel ? ' selected' : ''}" onclick="selFromList(${p.id})">
+        <div class="proj-name">${p.name}</div>
+        <div class="proj-meta">
+          <span style="color:${SECTOR_COLORS[p.sector]}">${SECTOR_ICONS[p.sector] || ''} ${cap(p.sector)}</span>
+          <span class="proj-cost">${fmtCost(p.estimatedCost)}</span>
+          <span class="proj-risk-badge ${risk.cls}">${risk.label}</span>
+        </div>
+        <div class="proj-meta" style="margin-top:2px">
+          <span>${p.region}</span>
+          <span>${p.status}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selFromList(id) {
+  const p = PIPELINE.find(x => x.id === id);
+  if (!p) return;
+  ST.selId = id;
+  renderMarkers();
+  buildProjList();
+  showDetail(p);
+  if (p.lat && p.lon) {
+    map.flyTo([p.lat, p.lon], Math.max(map.getZoom(), 10), { duration: 1.0 });
+    setTimeout(() => {
+      const m = leafletMarkers[id];
+      if (m && m.openTooltip) m.openTooltip();
+    }, 1100);
+  }
+  updateHash();
+}
+
+function updateCount() {
+  const el = document.getElementById('project-count');
+  if (!el) return;
+  const n = filtered().length;
+  el.textContent = `${n} of ${PIPELINE.length} projects`;
+}
+
+// ─────────────────────────────────────────────
+// FILTER UI
+// ─────────────────────────────────────────────
+function buildSectorBtns() {
+  const el = document.getElementById('sector-btns');
+  if (!el) return;
+  el.innerHTML = SECTOR_LIST.map(s => `
+    <button class="cat-btn on" data-sector="${s}" style="border-color:${SECTOR_COLORS[s]};color:${SECTOR_COLORS[s]}"
+      onclick="toggleSector('${s}',this)">${SECTOR_ICONS[s]} ${cap(s)}</button>
+  `).join('');
+  window.toggleSector = (s, btn) => {
+    if (ST.sectors.has(s)) { ST.sectors.delete(s); btn.classList.remove('on'); }
+    else { ST.sectors.add(s); btn.classList.add('on'); }
+    renderMarkers(); buildProjList(); updateHash();
+  };
+}
+
+function buildStatusBtns() {
+  const el = document.getElementById('status-btns');
+  if (!el) return;
+  el.innerHTML = STATUS_LIST.map(s => `
+    <button class="status-btn on" data-status="${s}" onclick="toggleStatus('${s}',this)">${s}</button>
+  `).join('');
+  window.toggleStatus = (s, btn) => {
+    if (ST.statuses.has(s)) { ST.statuses.delete(s); btn.classList.remove('on'); }
+    else { ST.statuses.add(s); btn.classList.add('on'); }
+    renderMarkers(); buildProjList(); updateHash();
+  };
+}
+
+function buildRiskBtns() {
+  const el = document.getElementById('risk-btns');
+  if (!el) return;
+  el.innerHTML = RISK_LIST.map(r => {
+    const rc = RISK_CONFIG[r];
+    return `<button class="risk-btn on" data-risk="${r}" style="border-color:${rc.color};color:${rc.color}"
+      onclick="toggleRisk('${r}',this)">${rc.label}</button>`;
+  }).join('');
+  window.toggleRisk = (r, btn) => {
+    if (ST.risks.has(r)) { ST.risks.delete(r); btn.classList.remove('on'); }
+    else { ST.risks.add(r); btn.classList.add('on'); }
+    renderMarkers(); buildProjList(); updateHash();
+  };
+}
+
+function applyFilters() {
+  ST.region = document.getElementById('filter-region')?.value || '';
+  renderMarkers(); buildProjList(); updateHash();
+}
+
+function onSearch(q) {
+  ST.searchQ = q;
+  renderMarkers(); buildProjList();
+}
+
+function onValueSlider(val) {
+  ST.minValue = parseInt(val);
+  const lbl = document.getElementById('value-label');
+  if (lbl) lbl.textContent = val > 0 ? `NZ$${val}M+` : 'Any';
+  renderMarkers(); buildProjList(); updateHash();
+}
+
+// ─────────────────────────────────────────────
+// LAYER TOGGLES
+// ─────────────────────────────────────────────
+function toggleLayer(name) {
+  ST.layers[name] = !ST.layers[name];
+  const btn = document.getElementById(`btn-${name}`);
+  if (btn) btn.classList.toggle('on', ST.layers[name]);
+
+  switch (name) {
+    case 'electorates': renderElectorateLayer(); break;
+    case 'maori':       renderMaoriLayer();       break;
+    case 'councils':    renderCouncilLayer();     break;
+    case 'regions':     renderRegionLayer();      break;
+    case 'marginal':    renderMarginalLayer();    break;
+  }
+}
+
+function renderElectorateLayer() {
+  if (electorateLayer) { electorateLayer.remove(); electorateLayer = null; }
+  if (!ST.layers.electorates || !ELECTION) return;
+
+  const results = ELECTION.electorates || {};
+  const generalEls = Object.entries(results).filter(([, v]) => v.type === 'general');
+
+  // Minimal synthetic GeoJSON from known electorate centroids
+  const features = generalEls.map(([name, data]) => {
+    const c = ELECTORATE_CENTROIDS[name];
+    if (!c) return null;
+    return {
+      type: 'Feature',
+      properties: { name, ...data },
+      geometry: {
+        type: 'Point',
+        coordinates: [c[1], c[0]],
+      },
+    };
+  }).filter(Boolean);
+
+  electorateLayer = L.layerGroup(features.map(f => {
+    const data  = f.properties;
+    const col   = PARTY_COLORS[data.party] || '#888';
+    const lat   = f.geometry.coordinates[1];
+    const lon   = f.geometry.coordinates[0];
+    return L.circleMarker([lat, lon], {
+      radius: 10,
+      fillColor: col,
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 0.8,
+      pane: 'electoratesPane',
+    }).bindTooltip(`<b>${f.properties.name}</b><br>${data.mp}<br>${data.party} · ${data.margin?.toFixed(1)}% margin`, {
+      className: 'stn-tooltip',
+    });
+  })).addTo(map);
+}
+
+function renderMaoriLayer() {
+  if (maoriLayer) { maoriLayer.remove(); maoriLayer = null; }
+  if (!ST.layers.maori || !ELECTION) return;
+  const results = ELECTION.electorates || {};
+  const maoriEls = Object.entries(results).filter(([, v]) => v.type === 'maori');
+
+  maoriLayer = L.layerGroup(maoriEls.map(([name, data]) => {
+    const c = MAORI_CENTROIDS[name];
+    if (!c) return null;
+    const col = PARTY_COLORS[data.party] || '#888';
+    return L.circleMarker([c[0], c[1]], {
+      radius: 12,
+      fillColor: col,
+      color: '#B2001A',
+      weight: 3,
+      fillOpacity: 0.85,
+      pane: 'electoratesPane',
+    }).bindTooltip(`<b>${name}</b> (Māori)<br>${data.mp}<br>${data.party} · ${data.margin?.toFixed(1)}% margin`, {
+      className: 'stn-tooltip',
+    });
+  }).filter(Boolean)).addTo(map);
+}
+
+function renderCouncilLayer() {
+  if (councilLayer) { councilLayer.remove(); councilLayer = null; }
+  if (!ST.layers.councils) return;
+  // Placeholder — in production, load councils.geojson
+  // For MVP: show a note that council boundaries require the geojson download
+  councilLayer = L.marker([-41, 174], {
+    icon: L.divIcon({ className: '', html: '<div style="background:var(--panel);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:11px;white-space:nowrap">Council boundaries: load councils.geojson</div>' })
+  }).addTo(map);
+}
+
+function renderRegionLayer() {
+  if (regionLayer) { regionLayer.remove(); regionLayer = null; }
+  if (!ST.layers.regions) return;
+  regionLayer = L.marker([-41, 174.5], {
+    icon: L.divIcon({ className: '', html: '<div style="background:var(--panel);border:1px solid var(--border);padding:6px 10px;border-radius:6px;font-size:11px;white-space:nowrap">Regional boundaries: load regions.geojson</div>' })
+  }).addTo(map);
+}
+
+function renderMarginalLayer() {
+  if (marginalLayer) { marginalLayer.remove(); marginalLayer = null; }
+  if (!ST.layers.marginal || !ELECTION) return;
+
+  const marginalEls = Object.entries(ELECTION.electorates || {})
+    .filter(([, v]) => v.margin < 5);
+
+  marginalLayer = L.layerGroup(marginalEls.map(([name, data]) => {
+    const c = data.type === 'maori' ? MAORI_CENTROIDS[name] : ELECTORATE_CENTROIDS[name];
+    if (!c) return null;
+    return L.circleMarker([c[0], c[1]], {
+      radius: 18,
+      fillColor: 'transparent',
+      color: '#FFB020',
+      weight: 3,
+      fillOpacity: 0,
+      opacity: 0.9,
+      dashArray: '6,4',
+      pane: 'electoratesPane',
+    }).bindTooltip(`<b>⚡ MARGINAL: ${name}</b><br>${data.party} · ${data.margin?.toFixed(1)}% margin`, {
+      className: 'stn-tooltip',
+    });
+  }).filter(Boolean)).addTo(map);
+}
+
+// ─────────────────────────────────────────────
+// RISK VIEW TOGGLE
+// ─────────────────────────────────────────────
+function toggleRiskView() {
+  ST.showRiskView = !ST.showRiskView;
+  const btn = document.getElementById('btn-risk');
+  if (btn) btn.classList.toggle('on', ST.showRiskView);
+  renderMarkers();
+
+  const right = document.getElementById('right');
+  if (ST.showRiskView && right) {
+    // Show ranked at-risk projects
+    const atRisk = PIPELINE
+      .filter(p => ['extreme','high'].includes(p.electionRisk))
+      .sort((a, b) => b.estimatedCost - a.estimatedCost);
+
+    const total = atRisk.reduce((s, p) => s + p.estimatedCost, 0);
+    const placeholder = document.getElementById('detail-placeholder');
+    const content = document.getElementById('detail-content');
+    if (placeholder) placeholder.style.display = 'none';
+    if (content) {
+      content.style.display = 'block';
+      content.innerHTML = `
+        <h2>🔴 At-Risk Projects</h2>
+        <div class="detail-desc">Projects most vulnerable to government change — ${atRisk.length} projects, total NZ${fmtCost(total)}</div>
+        ${atRisk.map(p => {
+          const risk = RISK_CONFIG[p.electionRisk];
+          return `<div class="proj-item" onclick="selFromList(${p.id})">
+            <div class="proj-name">${p.name}</div>
+            <div class="proj-meta">
+              <span class="proj-risk-badge ${risk.cls}">${risk.label}</span>
+              <span class="proj-cost">${fmtCost(p.estimatedCost)}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      `;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+// MMP ELECTION SIMULATOR
+// ─────────────────────────────────────────────
+function buildSimSliders() {
+  const el = document.getElementById('sim-sliders');
+  if (!el) return;
+
+  el.innerHTML = Object.entries(SIM).map(([party, pct]) => {
+    const col = PARTY_COLORS[party] || '#888';
+    return `
+      <div class="sim-slider-row">
+        <span class="sim-party-label" style="color:${col}">${party}</span>
+        <input type="range" min="0" max="60" step="0.5" value="${pct}"
+          id="sim-${party.replace(/\s/g,'_')}"
+          oninput="onSimSlider('${party}', parseFloat(this.value))"
+          style="accent-color:${col}">
+        <span class="sim-pct" id="simpct-${party.replace(/\s/g,'_')}">${pct.toFixed(1)}%</span>
+      </div>
+    `;
+  }).join('');
+
+  window.onSimSlider = (party, val) => {
+    SIM[party] = val;
+    document.getElementById(`simpct-${party.replace(/\s/g,'_')}`).textContent = val.toFixed(1) + '%';
+    runSim();
+  };
+
+  runSim();
+}
+
+function runSim() {
+  // Sainte-Laguë MMP allocation
+  const TOTAL_SEATS    = 120;
+  const ELECTORATE_SEATS = 72;
+  const LIST_SEATS     = TOTAL_SEATS - ELECTORATE_SEATS;
+  const THRESHOLD      = 5.0;
+
+  // Total vote for normalisation
+  const totalVote = Object.values(SIM).reduce((s, v) => s + v, 0);
+  const normalised = Object.fromEntries(
+    Object.entries(SIM).map(([p, v]) => [p, (v / totalVote) * 100])
+  );
+
+  // Determine eligible parties (≥5% or won electorate seat)
+  const electionSeats = ELECTION?.national?.seats || {};
+  const eligible = Object.keys(normalised).filter(p =>
+    normalised[p] >= THRESHOLD || (electionSeats[p] > 0)
+  );
+
+  // Estimate electorate wins using swing
+  const baseSeats = Object.fromEntries(Object.keys(SIM).map(p => [p, 0]));
+  Object.entries(ELECTION?.electorates || {}).forEach(([, data]) => {
+    const winner = estimateElectorateWinner(data, normalised);
+    if (winner) baseSeats[winner] = (baseSeats[winner] || 0) + 1;
+  });
+
+  // Sainte-Laguë list seat allocation
+  const listSeats = Object.fromEntries(eligible.map(p => [p, baseSeats[p] || 0]));
+  for (let i = 0; i < LIST_SEATS; i++) {
+    let best = null, bestQ = -1;
+    eligible.forEach(p => {
+      if (!eligible.includes(p)) return;
+      const q = normalised[p] / (2 * (listSeats[p] || 0) + 1);
+      if (q > bestQ) { bestQ = q; best = p; }
+    });
+    if (best) listSeats[best]++;
+  }
+
+  // Handle overhang
+  Object.keys(baseSeats).forEach(p => {
+    if ((baseSeats[p] || 0) > (listSeats[p] || 0)) {
+      listSeats[p] = baseSeats[p];
+    }
+  });
+
+  const result = document.getElementById('sim-result');
+  const coalition = document.getElementById('sim-coalition');
+  if (!result || !coalition) return;
+
+  const sorted = Object.entries(listSeats)
+    .filter(([, s]) => s > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const total = sorted.reduce((s, [, v]) => s + v, 0);
+
+  result.innerHTML = `
+    <div class="sim-seat-bar">
+      ${sorted.map(([p, s]) => `<div style="width:${(s/total*100).toFixed(1)}%;background:${PARTY_COLORS[p]||'#888'}" title="${p}: ${s}"></div>`).join('')}
+    </div>
+    ${sorted.map(([p, s]) => `
+      <div class="sim-seat-row">
+        <span style="color:${PARTY_COLORS[p]||'#888'}">${p}</span>
+        <span style="font-family:var(--mono)">${s} seats</span>
+      </div>
+    `).join('')}
+    <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px;font-weight:700">Total: ${total} seats</div>
+  `;
+
+  // Coalition analysis
+  const natBlock  = (listSeats['National'] || 0) + (listSeats['ACT'] || 0) + (listSeats['NZ First'] || 0);
+  const labBlock  = (listSeats['Labour'] || 0) + (listSeats['Green'] || 0) + (listSeats['Te Pāti Māori'] || 0);
+  const majority  = Math.ceil(total / 2) + 1;
+
+  if (natBlock >= majority) {
+    coalition.className = 'coalition-nat';
+    coalition.textContent = `🔵 National-led government (${natBlock} seats) — Nat+ACT${listSeats['NZ First'] ? '+NZF' : ''}`;
+  } else if (labBlock >= majority) {
+    coalition.className = 'coalition-lab';
+    coalition.textContent = `🔴 Labour-led government (${labBlock} seats) — Lab+Green${listSeats['Te Pāti Māori'] ? '+TPM' : ''}`;
+  } else {
+    coalition.className = 'coalition-hung';
+    coalition.textContent = `⚠️ Hung Parliament — no clear majority (need ${majority})`;
+  }
+}
+
+function estimateElectorateWinner(data, nationalPcts) {
+  if (!data.partyVote) return data.party;
+  const base2023 = data.partyVote;
+  const base2023national = ELECTION?.national?.partyVote || {};
+  let best = null, bestVote = -1;
+  Object.entries(base2023).forEach(([p, baseLocal]) => {
+    const baseNational = base2023national[p] || baseLocal;
+    const swing = (nationalPcts[p] || 0) - baseNational;
+    const adjusted = baseLocal + swing * 0.6;
+    if (adjusted > bestVote) { bestVote = adjusted; best = p; }
+  });
+  return best;
+}
+
+function resetSim() {
+  Object.assign(SIM, SIM_BASE);
+  Object.entries(SIM).forEach(([party, val]) => {
+    const slider = document.getElementById(`sim-${party.replace(/\s/g,'_')}`);
+    const label  = document.getElementById(`simpct-${party.replace(/\s/g,'_')}`);
+    if (slider) slider.value = val;
+    if (label)  label.textContent = val.toFixed(1) + '%';
+  });
+  runSim();
+}
+
+function toggleSimPanel() {
+  simVisible = !simVisible;
+  const body = document.getElementById('sim-body');
+  const btn  = document.getElementById('sim-toggle-btn');
+  const openBtn = document.getElementById('sim-open-btn');
+  const panel   = document.getElementById('sim-panel');
+  if (body) body.style.display = simVisible ? 'block' : 'none';
+  if (btn)  btn.textContent = simVisible ? 'Hide' : 'Show';
+  if (panel)   panel.style.display = simVisible ? 'block' : 'none';
+  if (openBtn) openBtn.style.display = simVisible ? 'none' : 'block';
+}
+
+// ─────────────────────────────────────────────
+// NEWS MODAL
+// ─────────────────────────────────────────────
+function buildNews() {
+  const el = document.getElementById('news-body');
+  if (!el || !NEWS) return;
+  el.innerHTML = [...NEWS].sort((a, b) => b.date.localeCompare(a.date)).map(a => `
+    <a href="${a.url}" target="_blank" rel="noopener" style="text-decoration:none">
+      <div class="news-item">
+        <div class="news-headline">${a.headline}</div>
+        <div class="news-meta">${a.source} · ${a.date}</div>
+        <div class="news-summary">${a.summary}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function openNews() {
+  document.getElementById('modal-overlay').style.display = 'block';
+  document.getElementById('news-modal').style.display = 'flex';
+}
+
+function openSources() {
+  document.getElementById('modal-overlay').style.display = 'block';
+  document.getElementById('sources-modal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+}
+
+// ─────────────────────────────────────────────
+// MOBILE
+// ─────────────────────────────────────────────
+function toggleMobileNav() {
+  document.getElementById('hdr-nav').classList.toggle('open');
+}
+
+function toggleMobileSidebar() {
+  const left    = document.getElementById('left');
+  const overlay = document.getElementById('sidebar-overlay');
+  const open    = left.classList.toggle('open');
+  overlay.classList.toggle('show', open);
+}
+
+// ─────────────────────────────────────────────
+// BANNER
+// ─────────────────────────────────────────────
+function dismissBanner() {
+  const b = document.getElementById('amalg-banner');
+  if (b) b.classList.add('hidden');
+  sessionStorage.setItem('amalg-dismissed', '1');
+}
+
+// ─────────────────────────────────────────────
+// URL HASH
+// ─────────────────────────────────────────────
+function updateHash() {
+  const params = new URLSearchParams();
+  if (ST.selId) params.set('p', ST.selId);
+  if (ST.region) params.set('r', ST.region);
+  if (ST.minValue > 0) params.set('v', ST.minValue);
+  location.hash = params.toString() ? '#' + params.toString() : '';
+}
+
+function restoreFromHash() {
+  if (!location.hash) return;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const projId = parseInt(params.get('p'));
+  if (projId) {
+    const p = PIPELINE.find(x => x.id === projId);
+    if (p) selFromList(projId);
+  }
+  if (params.get('r')) {
+    const sel = document.getElementById('filter-region');
+    if (sel) { sel.value = params.get('r'); ST.region = params.get('r'); }
+  }
+  if (params.get('v')) {
+    const val = parseInt(params.get('v'));
+    ST.minValue = val;
+    const slider = document.getElementById('value-slider');
+    if (slider) slider.value = val;
+    onValueSlider(val);
+  }
+  if (params.has('risk')) {
+    renderMarkers(); buildProjList();
+  }
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function cap(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+function fmtCost(m) {
+  if (!m) return 'TBC';
+  if (m >= 1000) return `NZ$${(m / 1000).toFixed(1)}B`;
+  return `NZ$${m}M`;
+}
+
+// ─────────────────────────────────────────────
+// ELECTORATE CENTROIDS (general)
+// ─────────────────────────────────────────────
+const ELECTORATE_CENTROIDS = {
+  'Auckland Central':   [-36.8550, 174.7590],
+  'Botany':             [-36.9200, 174.9100],
+  'Epsom':              [-36.8800, 174.7680],
+  'Wellington Central': [-41.2800, 174.7762],
+  'Rongotai':           [-41.3100, 174.8000],
+  'Hutt South':         [-41.2100, 174.9100],
+  'Remutaka':           [-41.1800, 175.0600],
+  'Whanganui':          [-39.9300, 175.0500],
+  'Palmerston North':   [-40.3553, 175.6099],
+  'Rangitīkei':         [-39.8000, 175.6000],
+  'Hamilton East':      [-37.7700, 175.3200],
+  'Hamilton West':      [-37.7870, 175.2820],
+  'Taranaki–King Country': [-39.0600, 174.0800],
+  'New Plymouth':       [-39.0700, 174.0800],
+  'Tauranga':           [-37.6879, 176.1671],
+  'Bay of Plenty':      [-37.8000, 176.4000],
+  'Rotorua':            [-38.1368, 176.2497],
+  'East Coast':         [-38.6000, 177.9000],
+  'Napier':             [-39.4928, 176.9120],
+  'Hastings':           [-39.6400, 176.8400],
+  'Tukituki':           [-39.7000, 176.8000],
+  'Wairarapa':          [-41.1200, 175.5000],
+  'Nelson':             [-41.2706, 173.2840],
+  'Kaikōura':           [-42.4000, 173.6800],
+  'Christchurch Central': [-43.5310, 172.6385],
+  'Christchurch East':  [-43.5200, 172.6900],
+  'Port Hills':         [-43.5900, 172.7300],
+  'Ilam':               [-43.5200, 172.5700],
+  'Selwyn':             [-43.7000, 172.3500],
+  'Waimakariri':        [-43.3800, 172.7300],
+  'Rangitata':          [-44.1000, 171.5000],
+  'Waitaki':            [-44.7000, 170.5000],
+  'Dunedin':            [-45.8742, 170.5039],
+  'Dunedin North':      [-45.8400, 170.4900],
+  'Invercargill':       [-46.4132, 168.3538],
+  'Southland':          [-45.8000, 168.3500],
+  'Northland':          [-35.7270, 174.3240],
+  'Whangārei':          [-35.7270, 174.3240],
+  'Kaipara ki Mahurangi': [-36.4000, 174.5000],
+  'Helensville':        [-36.6700, 174.4500],
+  'Kelston':            [-36.8900, 174.6500],
+  'New Lynn':           [-36.9000, 174.6900],
+  'Mt Albert':          [-36.8800, 174.7300],
+  'Mt Roskill':         [-36.9000, 174.7500],
+  'Maungakiekie':       [-36.9100, 174.8000],
+  'Manurewa':           [-37.0000, 174.8700],
+  'Papakura':           [-37.0600, 174.9400],
+  'Pakuranga':          [-36.9000, 174.9100],
+  'Flat Bush':          [-36.9500, 174.9300],
+  'Takanini':           [-37.0500, 174.9100],
+  'Northcote':          [-36.8100, 174.7500],
+  'East Coast Bays':    [-36.7000, 174.7700],
+  'Upper Harbour':      [-36.7500, 174.6500],
+  'Waitematā':          [-36.8500, 174.7600],
+  'Tāmaki':             [-36.8700, 174.8500],
+  'Coromandel':         [-36.8000, 175.5000],
+};
+
+const MAORI_CENTROIDS = {
+  'Hauraki-Waikato':   [-37.4000, 175.1000],
+  'Tāmaki Makaurau':   [-36.8700, 174.7600],
+  'Te Tai Tokerau':    [-35.5000, 173.9000],
+  'Te Tai Hauāuru':    [-39.5000, 175.0000],
+  'Ikaroa-Rāwhiti':    [-39.0000, 177.5000],
+  'Waiariki':          [-38.5000, 176.2000],
+  'Te Tai Tonga':      [-43.5000, 172.0000],
+};
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('amalg-dismissed')) {
+    const b = document.getElementById('amalg-banner');
+    if (b) b.classList.add('hidden');
+  }
+  _boot();
+});

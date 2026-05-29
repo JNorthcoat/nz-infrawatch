@@ -1,0 +1,182 @@
+[
+  {
+    "id": "a1",
+    "headline": "City Rail Link delayed again — full opening pushed to mid-2026",
+    "source": "NZ Herald",
+    "date": "2026-04-14",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [1],
+    "summary": "City Rail Link Ltd confirmed the full tunnel opening will not occur until mid-2026, citing fit-out delays and final systems integration challenges. The Aotea station opening precedes the full loop activation."
+  },
+  {
+    "id": "a2",
+    "headline": "Kāinga Ora cuts deepen — 2,500 social homes cancelled nationwide",
+    "source": "Stuff",
+    "date": "2026-03-28",
+    "url": "https://www.stuff.co.nz/",
+    "projectIds": [12, 41, 48],
+    "summary": "Kāinga Ora has cancelled or indefinitely deferred 2,500 planned homes across Auckland, Wellington, and Christchurch as part of the government's $900M cost reduction programme ordered by the Ministerial Review."
+  },
+  {
+    "id": "a3",
+    "headline": "Let's Get Wellington Moving replacement — National unveils $1.2B roads plan",
+    "source": "RNZ",
+    "date": "2026-03-15",
+    "url": "https://www.rnz.co.nz/",
+    "projectIds": [8],
+    "summary": "Transport Minister has announced the replacement for the cancelled LGWM programme — a $1.2B package focused on road widening, bus priority lanes, and a scaled-down rapid transit study. Critics say it falls far short of what Wellington needs."
+  },
+  {
+    "id": "a4",
+    "headline": "New Dunedin Hospital costs hit $3.1B — Treasury warns of further blowout risk",
+    "source": "Stuff",
+    "date": "2026-04-02",
+    "url": "https://www.stuff.co.nz/",
+    "projectIds": [9],
+    "summary": "Treasury's latest review of the New Dunedin Hospital puts costs at $3.1B, up from the 2019 estimate of $1.4B. The inpatient tower is on track but outpatient building design changes have added $200M+ to the bill."
+  },
+  {
+    "id": "a5",
+    "headline": "Interislander tender — three bidders shortlisted for Cook Strait ferries",
+    "source": "NZ Herald",
+    "date": "2026-05-08",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [37],
+    "summary": "KiwiRail has shortlisted three overseas shipbuilders for new Cook Strait ferries following cancellation of the iReX contract. A single new ferry is expected initially, with a second following. Port infrastructure redesign for Wellington continues."
+  },
+  {
+    "id": "a6",
+    "headline": "Penlink construction on track for 2027 opening",
+    "source": "Greater Auckland",
+    "date": "2026-04-22",
+    "url": "https://www.greaterauckland.org.nz/",
+    "projectIds": [4],
+    "summary": "Penlink construction is progressing well with tunnelling nearly complete. The new Whangaparāoa Peninsula link is expected to open in mid-2027. Tolling arrangements have been confirmed."
+  },
+  {
+    "id": "a7",
+    "headline": "Auckland Light Rail — Labour commits to reinstate if elected",
+    "source": "The Spinoff",
+    "date": "2026-05-12",
+    "url": "https://www.thespinoff.co.nz/",
+    "projectIds": [2],
+    "summary": "Labour leader has confirmed the party will reinstate Auckland Light Rail as a priority if elected in November 2026, but with a revised design and cost estimate. Greens have called for an even more ambitious version."
+  },
+  {
+    "id": "a8",
+    "headline": "Hawke's Bay cyclone recovery: $2.1B spent, but managed retreat battles continue",
+    "source": "Newsroom",
+    "date": "2026-03-05",
+    "url": "https://www.newsroom.co.nz/",
+    "projectIds": [23, 31],
+    "summary": "Three years after Cyclone Gabrielle, most critical infrastructure has been restored. However, managed retreat decisions for hundreds of properties remain contested, with some communities resisting relocation."
+  },
+  {
+    "id": "a9",
+    "headline": "Tauranga Northern Link progress: tunnelling begins on key Bay of Plenty route",
+    "source": "Bay of Plenty Times",
+    "date": "2026-02-18",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [7],
+    "summary": "Tunnelling has begun on the 12km Tauranga Northern Link expressway, which will connect SH2 and SH29 bypassing the congested Tauranga network. Due to open 2027."
+  },
+  {
+    "id": "a10",
+    "headline": "Wellington water: $300M main replacement begins after emergency burst",
+    "source": "RNZ",
+    "date": "2026-05-01",
+    "url": "https://www.rnz.co.nz/",
+    "projectIds": [11],
+    "summary": "Wellington Water has begun the largest single trunk main replacement project in the city's history after a major emergency burst cut water to 30,000 homes. The $300M project will replace 8km of century-old cast iron main."
+  },
+  {
+    "id": "a11",
+    "headline": "Eastern Busway Stage 1 opens Pakuranga to Highland Park",
+    "source": "Auckland Transport",
+    "date": "2026-01-28",
+    "url": "https://at.govt.nz/",
+    "projectIds": [3],
+    "summary": "Auckland Transport opened Stage 1 of the Eastern Busway from Pakuranga to Highland Park. The dedicated bus lane significantly reduces travel times from east Auckland to the CBD."
+  },
+  {
+    "id": "a12",
+    "headline": "Local Water Done Well — uptake slow as councils weigh options",
+    "source": "interest.co.nz",
+    "date": "2026-04-10",
+    "url": "https://www.interest.co.nz/",
+    "projectIds": [10],
+    "summary": "Only six territorial authorities have joined the government's Local Water Done Well framework in the first year. Critics say the voluntary approach will result in fragmented investment and continued under-delivery in water infrastructure."
+  },
+  {
+    "id": "a13",
+    "headline": "Harapaki wind farm commissioned — Hawke's Bay adds 176MW",
+    "source": "Meridian Energy",
+    "date": "2026-03-22",
+    "url": "https://www.meridian.co.nz/",
+    "projectIds": [44],
+    "summary": "Meridian Energy's Harapaki Wind Farm in Hawke's Bay has been commissioned, adding 176MW of renewable generation. The project uses 41 turbines and will generate ~600GWh annually."
+  },
+  {
+    "id": "a14",
+    "headline": "KiwiRail funding uncertainty — rail network faces deferred maintenance",
+    "source": "Newsroom",
+    "date": "2026-05-20",
+    "url": "https://www.newsroom.co.nz/",
+    "projectIds": [30, 32],
+    "summary": "KiwiRail has warned that without restoration of the Rail Resilience and Decarbonisation Fund, an increasing backlog of deferred maintenance will create reliability issues across the national network within 3–5 years."
+  },
+  {
+    "id": "a15",
+    "headline": "Pūhoi to Warkworth opens — northern motorway milestone",
+    "source": "NZ Herald",
+    "date": "2026-04-05",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [26],
+    "summary": "The 18.5km Pūhoi to Warkworth motorway has opened, cutting travel times between Auckland and Warkworth significantly. The final section of the Ara Tūhono project is now under construction."
+  },
+  {
+    "id": "a16",
+    "headline": "2026 election tracker: infrastructure at stake — the projects that could be cancelled",
+    "source": "The Spinoff",
+    "date": "2026-05-18",
+    "url": "https://www.thespinoff.co.nz/",
+    "projectIds": [2, 8, 13, 34, 40],
+    "summary": "With the November 2026 election approaching, analysis of the billions in infrastructure spending that could be reversed under a change of government. Roads of National Significance, light rail, and water policy all in play."
+  },
+  {
+    "id": "a17",
+    "headline": "Northland expressway: Whangārei electorate becomes key battleground",
+    "source": "Northern Advocate",
+    "date": "2026-05-10",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [34, 14],
+    "summary": "The proposed Northland expressway and Whangārei Hospital redevelopment have become focal points in Whangārei — one of NZ's most marginal electorates. Labour holds the seat by fewer than 1,000 votes."
+  },
+  {
+    "id": "a18",
+    "headline": "Ōtaki to north Wellington — first 20km section under construction",
+    "source": "Waka Kotahi",
+    "date": "2026-02-12",
+    "url": "https://www.nzta.govt.nz/",
+    "projectIds": [25],
+    "summary": "Construction has begun on the first 20km section of the Ōtaki to north Wellington highway upgrade. The project replaces the narrow, winding SH1 route through the Ōtaki-Wellington corridor."
+  },
+  {
+    "id": "a19",
+    "headline": "Defence estate spending jumps — Ohakea and Devonport upgrades begin",
+    "source": "NZ Herald",
+    "date": "2026-03-30",
+    "url": "https://www.nzherald.co.nz/",
+    "projectIds": [18],
+    "summary": "Defence spending has increased under the 2024 Defence Policy Review with major upgrades beginning at RNZAF Ohakea and HMNZS Philomel at Devonport Naval Base. National's defence programme is the largest in decades."
+  },
+  {
+    "id": "a20",
+    "headline": "Hamilton West — marginal seat now key to government formation",
+    "source": "RNZ",
+    "date": "2026-05-15",
+    "url": "https://www.rnz.co.nz/",
+    "projectIds": [24, 6],
+    "summary": "Hamilton West has been identified by political analysts as a potential bellwether electorate for the November 2026 election. National holds the seat by 4.2% — tight enough to flip. Infrastructure projects including the Hamilton Bypass are front and centre in the campaign."
+  }
+]

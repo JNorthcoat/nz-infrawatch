@@ -1,0 +1,467 @@
+{
+  "national": {
+    "partyVote": {
+      "National": 38.06,
+      "Labour": 26.91,
+      "Green": 11.60,
+      "ACT": 8.64,
+      "NZ First": 6.08,
+      "Te Pāti Māori": 3.08,
+      "TOP": 2.01,
+      "Other": 3.62
+    },
+    "seats": {
+      "National": 48,
+      "Labour": 34,
+      "Green": 15,
+      "ACT": 11,
+      "NZ First": 8,
+      "Te Pāti Māori": 6
+    },
+    "total": 122,
+    "governingCoalition": ["National", "ACT", "NZ First"]
+  },
+  "electorates": {
+    "Auckland Central": {
+      "type": "general",
+      "mp": "Chlöe Swarbrick",
+      "party": "Green",
+      "margin": 4.2,
+      "partyVote": { "Labour": 32.1, "National": 28.4, "Green": 18.2, "ACT": 8.1, "NZ First": 5.3 }
+    },
+    "Botany": {
+      "type": "general",
+      "mp": "Christopher Luxon",
+      "party": "National",
+      "margin": 18.5,
+      "partyVote": { "National": 45.2, "Labour": 23.1, "ACT": 12.3, "NZ First": 6.1, "Green": 5.8 }
+    },
+    "Epsom": {
+      "type": "general",
+      "mp": "David Seymour",
+      "party": "ACT",
+      "margin": 22.1,
+      "partyVote": { "National": 38.4, "ACT": 32.1, "Labour": 16.2, "Green": 6.4, "NZ First": 3.1 }
+    },
+    "Wellington Central": {
+      "type": "general",
+      "mp": "Nicola Willis",
+      "party": "National",
+      "margin": 3.1,
+      "partyVote": { "Labour": 31.2, "Green": 24.8, "National": 22.4, "ACT": 8.3, "NZ First": 4.2 }
+    },
+    "Rongotai": {
+      "type": "general",
+      "mp": "Paul Eagle",
+      "party": "Labour",
+      "margin": 6.8,
+      "partyVote": { "Labour": 33.4, "National": 27.8, "Green": 16.2, "ACT": 8.1, "NZ First": 5.4 }
+    },
+    "Hutt South": {
+      "type": "general",
+      "mp": "Chris Bishop",
+      "party": "National",
+      "margin": 5.2,
+      "partyVote": { "National": 35.6, "Labour": 31.8, "Green": 12.4, "ACT": 8.9, "NZ First": 5.3 }
+    },
+    "Remutaka": {
+      "type": "general",
+      "mp": "Chris Hipkins",
+      "party": "Labour",
+      "margin": 9.4,
+      "partyVote": { "Labour": 36.8, "National": 30.2, "Green": 11.8, "ACT": 9.2, "NZ First": 5.9 }
+    },
+    "Whanganui": {
+      "type": "general",
+      "mp": "Steph Lewis",
+      "party": "National",
+      "margin": 8.4,
+      "partyVote": { "National": 42.1, "Labour": 29.8, "ACT": 10.2, "NZ First": 8.3, "Green": 4.6 }
+    },
+    "Palmerston North": {
+      "type": "general",
+      "mp": "Tangi Utikere",
+      "party": "Labour",
+      "margin": 7.2,
+      "partyVote": { "Labour": 35.4, "National": 32.1, "Green": 10.8, "ACT": 9.4, "NZ First": 6.2 }
+    },
+    "Rangitīkei": {
+      "type": "general",
+      "mp": "Ian McKelvie",
+      "party": "National",
+      "margin": 24.1,
+      "partyVote": { "National": 48.2, "Labour": 23.8, "ACT": 11.3, "NZ First": 8.9, "Green": 3.4 }
+    },
+    "Hamilton East": {
+      "type": "general",
+      "mp": "Mark Irvine",
+      "party": "National",
+      "margin": 6.8,
+      "partyVote": { "National": 40.3, "Labour": 29.8, "ACT": 11.2, "NZ First": 7.8, "Green": 6.4 }
+    },
+    "Hamilton West": {
+      "type": "general",
+      "mp": "Tama Potaka",
+      "party": "National",
+      "margin": 4.2,
+      "partyVote": { "National": 36.8, "Labour": 31.4, "ACT": 11.8, "Green": 8.2, "NZ First": 6.3 }
+    },
+    "Taranaki–King Country": {
+      "type": "general",
+      "mp": "Shane Jones (NZ First via list)",
+      "party": "National",
+      "margin": 19.3,
+      "partyVote": { "National": 46.3, "Labour": 24.8, "ACT": 10.2, "NZ First": 9.4, "Green": 4.1 }
+    },
+    "New Plymouth": {
+      "type": "general",
+      "mp": "Glen Bennett",
+      "party": "Labour",
+      "margin": 2.1,
+      "partyVote": { "National": 38.4, "Labour": 31.2, "ACT": 10.3, "NZ First": 8.4, "Green": 5.8 }
+    },
+    "Tauranga": {
+      "type": "general",
+      "mp": "Sam Uffindell",
+      "party": "National",
+      "margin": 16.2,
+      "partyVote": { "National": 44.8, "Labour": 24.3, "ACT": 11.4, "NZ First": 7.8, "Green": 5.9 }
+    },
+    "Bay of Plenty": {
+      "type": "general",
+      "mp": "Tom Rutherford",
+      "party": "National",
+      "margin": 18.4,
+      "partyVote": { "National": 46.2, "Labour": 24.1, "ACT": 10.8, "NZ First": 8.2, "Green": 4.8 }
+    },
+    "Rotorua": {
+      "type": "general",
+      "mp": "Todd McClay",
+      "party": "National",
+      "margin": 12.6,
+      "partyVote": { "National": 40.8, "Labour": 29.2, "ACT": 10.4, "NZ First": 8.1, "Green": 5.6 }
+    },
+    "East Coast": {
+      "type": "general",
+      "mp": "Dana Kirkpatrick",
+      "party": "National",
+      "margin": 10.4,
+      "partyVote": { "National": 41.2, "Labour": 28.4, "ACT": 9.8, "NZ First": 9.3, "Green": 5.1 }
+    },
+    "Napier": {
+      "type": "general",
+      "mp": "Katie Nimon",
+      "party": "National",
+      "margin": 5.6,
+      "partyVote": { "National": 38.4, "Labour": 30.2, "ACT": 11.3, "NZ First": 8.4, "Green": 6.2 }
+    },
+    "Hastings": {
+      "type": "general",
+      "mp": "Anna Lorck",
+      "party": "Labour",
+      "margin": 3.4,
+      "partyVote": { "National": 36.8, "Labour": 33.4, "ACT": 10.2, "NZ First": 8.8, "Green": 5.4 }
+    },
+    "Tukituki": {
+      "type": "general",
+      "mp": "Lawrence Yule",
+      "party": "National",
+      "margin": 14.2,
+      "partyVote": { "National": 44.2, "Labour": 25.8, "ACT": 11.2, "NZ First": 8.4, "Green": 4.8 }
+    },
+    "Wairarapa": {
+      "type": "general",
+      "mp": "Mike Butterick",
+      "party": "National",
+      "margin": 12.8,
+      "partyVote": { "National": 43.4, "Labour": 26.8, "ACT": 11.2, "NZ First": 8.1, "Green": 5.3 }
+    },
+    "Nelson": {
+      "type": "general",
+      "mp": "Rachel Boyack",
+      "party": "Labour",
+      "margin": 2.8,
+      "partyVote": { "National": 34.2, "Labour": 30.8, "Green": 14.8, "ACT": 10.4, "NZ First": 5.8 }
+    },
+    "Kaikōura": {
+      "type": "general",
+      "mp": "Stuart Smith",
+      "party": "National",
+      "margin": 26.4,
+      "partyVote": { "National": 50.2, "Labour": 21.4, "ACT": 12.8, "NZ First": 7.4, "Green": 4.2 }
+    },
+    "Christchurch Central": {
+      "type": "general",
+      "mp": "Duncan Webb",
+      "party": "Labour",
+      "margin": 5.8,
+      "partyVote": { "Labour": 34.2, "National": 28.4, "Green": 16.8, "ACT": 9.4, "NZ First": 5.2 }
+    },
+    "Christchurch East": {
+      "type": "general",
+      "mp": "Tracey McLellan",
+      "party": "Labour",
+      "margin": 8.4,
+      "partyVote": { "Labour": 38.4, "National": 30.8, "Green": 10.4, "ACT": 9.2, "NZ First": 6.8 }
+    },
+    "Port Hills": {
+      "type": "general",
+      "mp": "Toni Severin",
+      "party": "National",
+      "margin": 6.2,
+      "partyVote": { "National": 37.4, "Labour": 29.2, "Green": 14.8, "ACT": 10.4, "NZ First": 5.3 }
+    },
+    "Ilam": {
+      "type": "general",
+      "mp": "Sarah Pallett",
+      "party": "National",
+      "margin": 14.8,
+      "partyVote": { "National": 43.8, "Labour": 25.4, "Green": 12.8, "ACT": 11.2, "NZ First": 4.8 }
+    },
+    "Selwyn": {
+      "type": "general",
+      "mp": "Nicola Grigg",
+      "party": "National",
+      "margin": 24.1,
+      "partyVote": { "National": 50.8, "Labour": 22.4, "ACT": 12.8, "NZ First": 6.8, "Green": 4.2 }
+    },
+    "Waimakariri": {
+      "type": "general",
+      "mp": "Matt Doocey",
+      "party": "National",
+      "margin": 10.4,
+      "partyVote": { "National": 44.2, "Labour": 28.4, "ACT": 11.8, "NZ First": 7.4, "Green": 4.8 }
+    },
+    "Rangitata": {
+      "type": "general",
+      "mp": "James Meager",
+      "party": "National",
+      "margin": 16.8,
+      "partyVote": { "National": 46.4, "Labour": 23.8, "ACT": 12.4, "NZ First": 8.2, "Green": 4.1 }
+    },
+    "Waitaki": {
+      "type": "general",
+      "mp": "Miles Anderson",
+      "party": "National",
+      "margin": 22.4,
+      "partyVote": { "National": 49.2, "Labour": 22.4, "ACT": 11.8, "NZ First": 8.4, "Green": 3.8 }
+    },
+    "Dunedin": {
+      "type": "general",
+      "mp": "David Clark",
+      "party": "Labour",
+      "margin": 8.4,
+      "partyVote": { "Labour": 36.8, "National": 24.2, "Green": 20.4, "ACT": 9.2, "NZ First": 4.2 }
+    },
+    "Dunedin North": {
+      "type": "general",
+      "mp": "Ingrid Leary",
+      "party": "Labour",
+      "margin": 10.2,
+      "partyVote": { "Labour": 38.4, "National": 22.4, "Green": 19.8, "ACT": 8.4, "NZ First": 4.1 }
+    },
+    "Invercargill": {
+      "type": "general",
+      "mp": "Penny Simmonds",
+      "party": "National",
+      "margin": 16.8,
+      "partyVote": { "National": 44.8, "Labour": 26.4, "ACT": 11.4, "NZ First": 8.8, "Green": 4.2 }
+    },
+    "Southland": {
+      "type": "general",
+      "mp": "Joseph Mooney",
+      "party": "National",
+      "margin": 21.4,
+      "partyVote": { "National": 48.4, "Labour": 23.8, "ACT": 12.4, "NZ First": 8.2, "Green": 3.4 }
+    },
+    "Northland": {
+      "type": "general",
+      "mp": "Grant McCallum",
+      "party": "National",
+      "margin": 14.2,
+      "partyVote": { "National": 44.8, "Labour": 26.4, "ACT": 10.4, "NZ First": 9.8, "Green": 3.8 }
+    },
+    "Whangārei": {
+      "type": "general",
+      "mp": "Emily Henderson",
+      "party": "Labour",
+      "margin": 1.8,
+      "partyVote": { "National": 38.8, "Labour": 30.4, "ACT": 11.2, "NZ First": 10.4, "Green": 4.2 }
+    },
+    "Kaipara ki Mahurangi": {
+      "type": "general",
+      "mp": "Mark Mitchell",
+      "party": "National",
+      "margin": 20.4,
+      "partyVote": { "National": 48.4, "Labour": 23.4, "ACT": 12.8, "NZ First": 7.8, "Green": 4.2 }
+    },
+    "Helensville": {
+      "type": "general",
+      "mp": "Chris Penk",
+      "party": "National",
+      "margin": 16.8,
+      "partyVote": { "National": 46.4, "Labour": 25.4, "ACT": 12.8, "NZ First": 7.4, "Green": 4.4 }
+    },
+    "Kelston": {
+      "type": "general",
+      "mp": "Camilla Belich",
+      "party": "Labour",
+      "margin": 6.8,
+      "partyVote": { "Labour": 40.4, "National": 30.8, "Green": 10.4, "ACT": 8.2, "NZ First": 6.8 }
+    },
+    "New Lynn": {
+      "type": "general",
+      "mp": "Deborah Russell",
+      "party": "Labour",
+      "margin": 5.4,
+      "partyVote": { "Labour": 37.8, "National": 32.4, "Green": 12.4, "ACT": 8.8, "NZ First": 5.4 }
+    },
+    "Mt Albert": {
+      "type": "general",
+      "mp": "Helen White",
+      "party": "Labour",
+      "margin": 7.2,
+      "partyVote": { "Labour": 38.4, "National": 28.8, "Green": 15.8, "ACT": 8.4, "NZ First": 4.4 }
+    },
+    "Mt Roskill": {
+      "type": "general",
+      "mp": "Michael Wood",
+      "party": "Labour",
+      "margin": 10.8,
+      "partyVote": { "Labour": 42.8, "National": 28.4, "Green": 12.4, "ACT": 7.8, "NZ First": 5.8 }
+    },
+    "Maungakiekie": {
+      "type": "general",
+      "mp": "Jenny Salesa (ret.) / Labour hold",
+      "party": "Labour",
+      "margin": 4.8,
+      "partyVote": { "Labour": 38.4, "National": 31.8, "Green": 10.8, "ACT": 9.2, "NZ First": 5.4 }
+    },
+    "Manurewa": {
+      "type": "general",
+      "mp": "Arena Williams",
+      "party": "Labour",
+      "margin": 14.8,
+      "partyVote": { "Labour": 48.4, "National": 26.4, "Green": 8.4, "NZ First": 8.2, "ACT": 5.8 }
+    },
+    "Papakura": {
+      "type": "general",
+      "mp": "Judith Collins",
+      "party": "National",
+      "margin": 14.2,
+      "partyVote": { "National": 44.8, "Labour": 28.4, "ACT": 10.8, "NZ First": 7.8, "Green": 4.8 }
+    },
+    "Pakuranga": {
+      "type": "general",
+      "mp": "Simeon Brown",
+      "party": "National",
+      "margin": 22.4,
+      "partyVote": { "National": 48.8, "Labour": 24.2, "ACT": 11.8, "NZ First": 6.4, "Green": 5.4 }
+    },
+    "Flat Bush": {
+      "type": "general",
+      "mp": "National (new 2020)",
+      "party": "National",
+      "margin": 8.4,
+      "partyVote": { "National": 40.4, "Labour": 32.8, "ACT": 10.4, "NZ First": 7.8, "Green": 5.4 }
+    },
+    "Takanini": {
+      "type": "general",
+      "mp": "Labour hold",
+      "party": "Labour",
+      "margin": 3.2,
+      "partyVote": { "Labour": 40.4, "National": 30.8, "ACT": 9.8, "NZ First": 8.4, "Green": 6.4 }
+    },
+    "Northcote": {
+      "type": "general",
+      "mp": "Dan Bidois",
+      "party": "National",
+      "margin": 6.8,
+      "partyVote": { "National": 40.4, "Labour": 30.4, "Green": 12.8, "ACT": 9.4, "NZ First": 4.2 }
+    },
+    "East Coast Bays": {
+      "type": "general",
+      "mp": "Mark Mitchell",
+      "party": "National",
+      "margin": 24.4,
+      "partyVote": { "National": 50.4, "Labour": 21.4, "ACT": 12.8, "Green": 8.4, "NZ First": 4.2 }
+    },
+    "Upper Harbour": {
+      "type": "general",
+      "mp": "Casey Costello",
+      "party": "National",
+      "margin": 18.8,
+      "partyVote": { "National": 47.4, "Labour": 24.4, "ACT": 13.8, "Green": 8.2, "NZ First": 4.4 }
+    },
+    "Waitematā": {
+      "type": "general",
+      "mp": "Helen White",
+      "party": "Labour",
+      "margin": 5.4,
+      "partyVote": { "Labour": 34.8, "National": 26.4, "Green": 22.8, "ACT": 8.4, "NZ First": 4.2 }
+    },
+    "Tāmaki": {
+      "type": "general",
+      "mp": "Simon O'Connor",
+      "party": "National",
+      "margin": 18.4,
+      "partyVote": { "National": 46.4, "Labour": 26.8, "ACT": 11.8, "Green": 7.4, "NZ First": 5.4 }
+    },
+    "Coromandel": {
+      "type": "general",
+      "mp": "Mark Patterson",
+      "party": "National",
+      "margin": 20.4,
+      "partyVote": { "National": 46.8, "Labour": 24.4, "ACT": 11.8, "Green": 8.4, "NZ First": 5.4 }
+    },
+    "Hauraki-Waikato": {
+      "type": "maori",
+      "mp": "Nanaia Mahuta",
+      "party": "Labour",
+      "margin": 8.4,
+      "partyVote": { "Labour": 32.4, "Te Pāti Māori": 30.8, "National": 14.4, "Green": 10.8, "NZ First": 6.4 }
+    },
+    "Tāmaki Makaurau": {
+      "type": "maori",
+      "mp": "Peeni Henare",
+      "party": "Te Pāti Māori",
+      "margin": 12.4,
+      "partyVote": { "Te Pāti Māori": 40.4, "Labour": 28.4, "Green": 14.8, "National": 8.4, "NZ First": 4.8 }
+    },
+    "Te Tai Tokerau": {
+      "type": "maori",
+      "mp": "Mariameno Kapa-Kingi",
+      "party": "Te Pāti Māori",
+      "margin": 16.4,
+      "partyVote": { "Te Pāti Māori": 44.4, "Labour": 28.4, "Green": 12.8, "National": 6.4, "NZ First": 4.4 }
+    },
+    "Te Tai Hauāuru": {
+      "type": "maori",
+      "mp": "Debbie Ngarewa-Packer",
+      "party": "Te Pāti Māori",
+      "margin": 20.4,
+      "partyVote": { "Te Pāti Māori": 46.4, "Labour": 26.4, "Green": 10.8, "National": 8.4, "NZ First": 4.4 }
+    },
+    "Ikaroa-Rāwhiti": {
+      "type": "maori",
+      "mp": "Cushla Tangaere-Manuel",
+      "party": "Labour",
+      "margin": 4.2,
+      "partyVote": { "Labour": 34.4, "Te Pāti Māori": 30.4, "Green": 14.8, "National": 10.4, "NZ First": 5.4 }
+    },
+    "Waiariki": {
+      "type": "maori",
+      "mp": "Rawiri Waititi",
+      "party": "Te Pāti Māori",
+      "margin": 28.4,
+      "partyVote": { "Te Pāti Māori": 54.4, "Labour": 26.4, "Green": 8.4, "National": 5.4, "NZ First": 3.4 }
+    },
+    "Te Tai Tonga": {
+      "type": "maori",
+      "mp": "Tākuta Ferris",
+      "party": "Te Pāti Māori",
+      "margin": 18.4,
+      "partyVote": { "Te Pāti Māori": 44.4, "Labour": 26.4, "Green": 10.8, "National": 8.4, "NZ First": 5.4 }
+    }
+  }
+}
