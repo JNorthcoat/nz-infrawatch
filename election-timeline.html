@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfraWatch Election Calendar — AU & NZ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0a0e17;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .header {
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 0.25rem;
+  }
+
+  .header p {
+    color: #94a3b8;
+    font-size: 0.875rem;
+  }
+
+  .today-marker {
+    display: inline-block;
+    background: #22d3ee;
+    color: #0a0e17;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 0.75rem;
+    vertical-align: middle;
+  }
+
+  .filters {
+    max-width: 1200px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+    background: #0f172a;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover { border-color: #334155; color: #cbd5e1; }
+  .filter-btn.active { background: #1e293b; color: #f8fafc; border-color: #475569; }
+
+  .legend {
+    max-width: 1200px;
+    margin: 0 auto 1rem;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .timeline-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .year-section {
+    margin-bottom: 2rem;
+  }
+
+  .year-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .election-card {
+    display: flex;
+    align-items: stretch;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .election-card:hover {
+    border-color: #334155;
+    background: #131c2e;
+    transform: translateX(2px);
+  }
+
+  .election-card.past {
+    opacity: 0.45;
+  }
+
+  .card-color-bar {
+    width: 4px;
+    flex-shrink: 0;
+  }
+
+  .card-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .card-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: #64748b;
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+
+  .card-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    min-width: 200px;
+    flex: 1;
+  }
+
+  .card-type {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .type-federal { background: #1e1b4b; color: #a78bfa; }
+  .type-state { background: #172554; color: #60a5fa; }
+  .type-local { background: #052e16; color: #4ade80; }
+  .type-nz-general { background: #451a03; color: #fb923c; }
+  .type-nz-local { background: #422006; color: #fbbf24; }
+  .type-nz-regional { background: #3b0764; color: #c084fc; }
+
+  .card-impact {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    min-width: 200px;
+    flex: 1;
+  }
+
+  .card-countdown {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: right;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .card-countdown.imminent { color: #f87171; font-weight: 500; }
+  .card-countdown.soon { color: #fbbf24; }
+
+  .card-country-flag {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .nz-reform-banner {
+    background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+    border: 1px solid #92400e;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .nz-reform-banner h3 {
+    font-size: 0.9rem;
+    color: #fbbf24;
+    margin-bottom: 0.375rem;
+  }
+
+  .nz-reform-banner p {
+    font-size: 0.8rem;
+    color: #fcd34d;
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+
+  .stats-row {
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    .card-body { flex-direction: column; align-items: flex-start; gap: 0.375rem; }
+    .card-impact { min-width: unset; }
+    .card-countdown { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>InfraWatch Election Calendar<span class="today-marker">TODAY: 27 May 2026</span></h1>
+  <p>Every upcoming election that affects infrastructure pipelines across Australia & New Zealand</p>
+</div>
+
+<div class="stats-row" id="stats"></div>
+
+<div class="filters" id="filters"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div> AU Federal</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div> AU State/Territory</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> AU Local</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> NZ General</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div> NZ Territorial Authority</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div> NZ Regional Council</div>
+</div>
+
+<div class="nz-reform-banner">
+  <h3>⚠ NZ Council Shake-up: Regional councils confirmed for abolition before 2028 elections</h3>
+  <p>On 5 May 2026, the NZ government gave all 78 councils a 3-month deadline (by 9 Aug 2026) to submit amalgamation proposals or have reform imposed. Regional councillors will not be elected in 2028. Territorial authority mergers are expected to follow. If Labour wins the Nov 2026 election, this entire reform could be reversed. InfraWatch opportunity: track which council structures survive and how infrastructure responsibilities shift.</p>
+</div>
+
+<div class="timeline-container" id="timeline"></div>
+
+<script>
+const TODAY = new Date('2026-05-27');
+
+const elections = [
+  // ── AU STATE / TERRITORY ──
+  {
+    name: "Victoria State Election",
+    date: "2026-11-28",
+    type: "au-state",
+    country: "au",
+    impact: "SRL ($200B), Metro Tunnel, transport pipeline at risk if govt changes. Victoria #1 infra spender for 4 yrs.",
+    seats: "88 Assembly + 40 Council",
+    infra_risk: "high"
+  },
+  {
+    name: "NSW State Election",
+    date: "2027-03-13",
+    type: "au-state",
+    country: "au",
+    impact: "Sydney Metro, Western Sydney Airport, WestConnex — core InfraWatch market. Pipeline projects vulnerable.",
+    seats: "93 Assembly + 21 Council",
+    infra_risk: "high"
+  },
+  {
+    name: "Northern Territory Election",
+    date: "2028-08-26",
+    type: "au-state",
+    country: "au",
+    impact: "Smaller pipeline but Darwin infrastructure and defence projects affected.",
+    seats: "25 seats",
+    infra_risk: "low"
+  },
+  {
+    name: "ACT Election",
+    date: "2028-10-21",
+    type: "au-state",
+    country: "au",
+    impact: "Light rail Stage 2, Canberra infrastructure pipeline.",
+    seats: "25 seats",
+    infra_risk: "medium"
+  },
+  {
+    name: "Queensland State Election",
+    date: "2028-10-28",
+    type: "au-state",
+    country: "au",
+    impact: "2032 Olympics infrastructure ($7B+). Brisbane Metro, Cross River Rail, Bruce Highway. Massive pipeline.",
+    seats: "93 seats",
+    infra_risk: "high"
+  },
+  {
+    name: "Tasmania State Election",
+    date: "2029-07-19",
+    type: "au-state",
+    country: "au",
+    impact: "Smaller state pipeline. Bridgewater Bridge, Hobart transit projects.",
+    seats: "35 seats",
+    infra_risk: "low"
+  },
+  {
+    name: "Western Australia State Election",
+    date: "2029-03-08",
+    type: "au-state",
+    country: "au",
+    impact: "METRONET rail expansion, Perth infrastructure. WA's pipeline is significant.",
+    seats: "59 Assembly + 37 Council",
+    infra_risk: "medium"
+  },
+  {
+    name: "South Australia State Election",
+    date: "2030-03-21",
+    type: "au-state",
+    country: "au",
+    impact: "North-South Corridor, Adelaide rail. Moderate pipeline.",
+    seats: "47 Assembly + 11 Council",
+    infra_risk: "medium"
+  },
+
+  // ── AU FEDERAL ──
+  {
+    name: "Australian Federal Election",
+    date: "2028-05-20",
+    type: "au-federal",
+    country: "au",
+    impact: "$242B national pipeline. Last transition cut 50 projects ($7B). Election-year pork-barreling adds uncosted projects.",
+    seats: "150 House + 40 Senate",
+    infra_risk: "high"
+  },
+
+  // ── AU LOCAL ──
+  {
+    name: "Tasmania Local Government Elections",
+    date: "2026-10-01",
+    type: "au-local",
+    country: "au",
+    impact: "29 councils. Local infrastructure priorities.",
+    seats: "~260 councillors",
+    infra_risk: "low"
+  },
+  {
+    name: "South Australia Local Elections",
+    date: "2026-11-14",
+    type: "au-local",
+    country: "au",
+    impact: "67 councils. Local roads, parks, stormwater infra.",
+    seats: "~700 councillors + mayors",
+    infra_risk: "low"
+  },
+  {
+    name: "Queensland Local Elections",
+    date: "2028-03-25",
+    type: "au-local",
+    country: "au",
+    impact: "77 LGAs incl. Brisbane City (largest council in AU). Olympics-related local infra.",
+    seats: "~460 councillors + mayors",
+    infra_risk: "medium"
+  },
+  {
+    name: "NSW Local Government Elections",
+    date: "2028-09-09",
+    type: "au-local",
+    country: "au",
+    impact: "128 councils. Core InfraWatch market. Council-level development approvals, local roads, community infra.",
+    seats: "~1,200 councillors + mayors",
+    infra_risk: "medium"
+  },
+  {
+    name: "Victoria Local Elections",
+    date: "2028-10-26",
+    type: "au-local",
+    country: "au",
+    impact: "79 LGAs. Local planning decisions, community infra.",
+    seats: "~650 councillors",
+    infra_risk: "medium"
+  },
+
+  // ── NZ GENERAL ──
+  {
+    name: "New Zealand General Election",
+    date: "2026-11-07",
+    type: "nz-general",
+    country: "nz",
+    impact: "EXTREME risk. Last transition killed $2B+ in projects (Light Rail, Three Waters, ferries). Polls show Labour leading — another full reversal possible.",
+    seats: "120 seats (MMP)",
+    infra_risk: "extreme"
+  },
+
+  // ── NZ LOCAL (Territorial Authorities — all held simultaneously) ──
+  {
+    name: "NZ Territorial Authority Elections (all 67 councils)",
+    date: "2028-10-01",
+    type: "nz-local",
+    country: "nz",
+    impact: "All 67 city/district councils elect simultaneously. By 2028, many may be merged under forced amalgamation. ~710 councillors + 66 mayors.",
+    seats: "~776 positions",
+    infra_risk: "high"
+  },
+
+  // ── NZ REGIONAL COUNCILS ──
+  {
+    name: "NZ Regional Council Elections (all 11 regions) — LIKELY ABOLISHED",
+    date: "2028-10-01",
+    type: "nz-regional",
+    country: "nz",
+    impact: "Govt confirmed regional councillors will NOT be elected in 2028. Councils being abolished/merged. If Labour wins Nov 2026, abolition may be reversed.",
+    seats: "132 councillors (currently) — may be 0",
+    infra_risk: "extreme"
+  },
+
+  // ── PAST (for context) ──
+  {
+    name: "Australian Federal Election (Labor re-elected)",
+    date: "2025-05-03",
+    type: "au-federal",
+    country: "au",
+    impact: "Labor won strong majority. Continuity for $242B pipeline. $17.1B road/rail commitment over 10 years.",
+    seats: "150 House + 40 Senate",
+    infra_risk: "low",
+    past: true
+  },
+  {
+    name: "NZ Local Elections (all councils)",
+    date: "2025-10-11",
+    type: "nz-local",
+    country: "nz",
+    impact: "66 mayors + 709 councillors + 132 regional councillors elected. Many may not serve full term due to amalgamation.",
+    seats: "~900 positions",
+    infra_risk: "medium",
+    past: true
+  },
+  {
+    name: "NSW Local Government Elections",
+    date: "2024-09-14",
+    type: "au-local",
+    country: "au",
+    impact: "128 councils. Results now shaping local infra priorities for 4-year term.",
+    seats: "~1,200 councillors",
+    infra_risk: "low",
+    past: true
+  },
+  {
+    name: "Victoria Local Elections",
+    date: "2024-10-26",
+    type: "au-local",
+    country: "au",
+    impact: "79 LGAs elected. Now in office.",
+    seats: "~650 councillors",
+    infra_risk: "low",
+    past: true
+  },
+  {
+    name: "Queensland State Election (LNP won)",
+    date: "2024-10-26",
+    type: "au-state",
+    country: "au",
+    impact: "LNP won government. Olympics infra pipeline largely maintained but priorities shifting.",
+    seats: "93 seats",
+    infra_risk: "medium",
+    past: true
+  }
+];
+
+// Sort by date
+elections.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+const typeColors = {
+  'au-federal': '#a78bfa',
+  'au-state': '#60a5fa',
+  'au-local': '#4ade80',
+  'nz-general': '#fb923c',
+  'nz-local': '#fbbf24',
+  'nz-regional': '#c084fc'
+};
+
+const typeLabels = {
+  'au-federal': 'AU Federal',
+  'au-state': 'AU State',
+  'au-local': 'AU Local',
+  'nz-general': 'NZ General',
+  'nz-local': 'NZ Local',
+  'nz-regional': 'NZ Regional'
+};
+
+const typeCssClass = {
+  'au-federal': 'type-federal',
+  'au-state': 'type-state',
+  'au-local': 'type-local',
+  'nz-general': 'type-nz-general',
+  'nz-local': 'type-nz-local',
+  'nz-regional': 'type-nz-regional'
+};
+
+// State
+let activeFilters = new Set(['au-federal','au-state','au-local','nz-general','nz-local','nz-regional']);
+let showPast = false;
+
+function daysBetween(d1, d2) {
+  return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function renderStats() {
+  const upcoming = elections.filter(e => !e.past && new Date(e.date) >= TODAY);
+  const within12 = upcoming.filter(e => daysBetween(TODAY, new Date(e.date)) <= 365);
+  const nzUpcoming = upcoming.filter(e => e.country === 'nz');
+  const auUpcoming = upcoming.filter(e => e.country === 'au');
+  const nextElection = upcoming[0];
+  const daysToNext = nextElection ? daysBetween(TODAY, new Date(nextElection.date)) : '—';
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-number">${daysToNext}</div>
+      <div class="stat-label">Days to next election</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${within12.length}</div>
+      <div class="stat-label">Elections within 12 months</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${auUpcoming.length}</div>
+      <div class="stat-label">Upcoming AU elections</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${nzUpcoming.length}</div>
+      <div class="stat-label">Upcoming NZ elections</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${upcoming.filter(e => e.infra_risk === 'high' || e.infra_risk === 'extreme').length}</div>
+      <div class="stat-label">High infra-risk elections</div>
+    </div>
+  `;
+}
+
+function renderFilters() {
+  const container = document.getElementById('filters');
+  let html = '';
+
+  // Country toggles
+  html += `<button class="filter-btn active" onclick="toggleCountry('au')" id="btn-au">🇦🇺 Australia</button>`;
+  html += `<button class="filter-btn active" onclick="toggleCountry('nz')" id="btn-nz">🇳🇿 New Zealand</button>`;
+  html += `<span style="color:#334155;padding:0 4px">|</span>`;
+
+  for (const [type, label] of Object.entries(typeLabels)) {
+    const isActive = activeFilters.has(type);
+    html += `<button class="filter-btn ${isActive ? 'active' : ''}" onclick="toggleFilter('${type}')" id="btn-${type}">${label}</button>`;
+  }
+
+  html += `<span style="color:#334155;padding:0 4px">|</span>`;
+  html += `<button class="filter-btn ${showPast ? 'active' : ''}" onclick="togglePast()" id="btn-past">Show past</button>`;
+
+  container.innerHTML = html;
+}
+
+function toggleFilter(type) {
+  if (activeFilters.has(type)) activeFilters.delete(type);
+  else activeFilters.add(type);
+  render();
+}
+
+function toggleCountry(country) {
+  const types = Object.keys(typeLabels).filter(t => t.startsWith(country));
+  const allActive = types.every(t => activeFilters.has(t));
+  types.forEach(t => allActive ? activeFilters.delete(t) : activeFilters.add(t));
+  render();
+}
+
+function togglePast() {
+  showPast = !showPast;
+  render();
+}
+
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  let filtered = elections.filter(e => activeFilters.has(e.type));
+  if (!showPast) filtered = filtered.filter(e => !e.past);
+
+  // Group by year
+  const years = {};
+  filtered.forEach(e => {
+    const y = e.date.substring(0, 4);
+    if (!years[y]) years[y] = [];
+    years[y].push(e);
+  });
+
+  let html = '';
+  for (const [year, items] of Object.entries(years).sort()) {
+    html += `<div class="year-section"><div class="year-label">${year}</div>`;
+
+    items.forEach(e => {
+      const d = new Date(e.date);
+      const days = daysBetween(TODAY, d);
+      const isPast = e.past || d < TODAY;
+      let countdownText = '';
+      let countdownClass = '';
+
+      if (isPast) {
+        countdownText = `${Math.abs(days)}d ago`;
+      } else if (days <= 90) {
+        countdownText = `${days}d`;
+        countdownClass = 'imminent';
+      } else if (days <= 365) {
+        const months = Math.round(days / 30.44);
+        countdownText = `~${months}mo`;
+        countdownClass = 'soon';
+      } else {
+        const months = Math.round(days / 30.44);
+        countdownText = `~${months}mo`;
+      }
+
+      const riskEmoji = e.infra_risk === 'extreme' ? '🔴' : e.infra_risk === 'high' ? '🟠' : e.infra_risk === 'medium' ? '🟡' : '🟢';
+      const flag = e.country === 'au' ? '🇦🇺' : '🇳🇿';
+
+      html += `
+        <div class="election-card ${isPast ? 'past' : ''}">
+          <div class="card-color-bar" style="background:${typeColors[e.type]}"></div>
+          <div class="card-body">
+            <div class="card-country-flag">${flag}</div>
+            <div class="card-date">${formatDate(e.date)}</div>
+            <div class="card-name">${riskEmoji} ${e.name}</div>
+            <div class="card-type ${typeCssClass[e.type]}">${typeLabels[e.type]}</div>
+            <div class="card-impact">${e.impact}</div>
+            <div class="card-countdown ${countdownClass}">${countdownText}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+  }
+
+  if (filtered.length === 0) {
+    html = `<p style="text-align:center;color:#475569;padding:3rem">No elections match current filters.</p>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function render() {
+  renderStats();
+  renderFilters();
+  renderTimeline();
+}
+
+render();
+</script>
+</body>
+</html>
