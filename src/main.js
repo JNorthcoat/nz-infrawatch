@@ -484,10 +484,10 @@ async function renderElectorateLayer() {
     return normKeys[n] || null;
   }
 
-  // Load bundled GeoJSON (252 KB, served locally)
+  // Load 2025 Stats NZ electorate boundaries GeoJSON
   let geojsonData = null;
   try {
-    const r = await fetch(`${BASE_URL}data/electorates-general.geojson`);
+    const r = await fetch(`${BASE_URL}data/electorates-2025-general.geojson`);
     if (r.ok) geojsonData = await r.json();
   } catch (_) {}
 
@@ -505,10 +505,12 @@ async function renderElectorateLayer() {
         const matched = matchElect(geoName);
         const data    = matched ? results[matched] : {};
         const isMarg  = (data.margin || 99) < 5;
+        const turnoutStr = data.turnout != null ? `<br>Turnout: ${data.turnout.toFixed(1)}%` : '';
+        const name23 = data.name2023 ? ` <span style="font-size:9px;opacity:.7">(formerly ${data.name2023})</span>` : '';
         layer.bindTooltip(
           data.mp
-            ? `<b>${geoName}</b>${isMarg ? ' ⚡' : ''}<br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%`
-            : `<b>${geoName}</b>`,
+            ? `<b>${geoName}</b>${isMarg ? ' ⚡' : ''}${name23}<br>${data.mp} (${data.party})<br>Margin: ${data.margin?.toFixed(1)}%${turnoutStr}`
+            : `<b>${geoName}</b>${turnoutStr}`,
           { className: 'stn-tooltip' }
         );
         layer.on('mouseover', function() { this.setStyle({ fillOpacity: 0.65, weight: 1.5 }); });
@@ -545,7 +547,7 @@ async function renderElectorateLayer() {
     const rows = Object.entries(counts).sort((a, b) => b[1] - a[1])
       .map(([p, n]) => `<div class="legend-row"><span class="legend-dot" style="background:${PARTY_COLORS[p]||'#888'}"></span>${p}<span style="color:var(--dim);margin-left:auto;padding-left:8px">${n}</span></div>`)
       .join('');
-    leg.innerHTML = `<div style="font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;text-transform:uppercase">2023 Result</div>${rows}`;
+    leg.innerHTML = `<div style="font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;text-transform:uppercase">2023 Result · 2025 Boundaries</div>${rows}`;
     leg.classList.add('show');
   }
 }
