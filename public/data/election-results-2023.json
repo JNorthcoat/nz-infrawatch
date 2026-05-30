@@ -414,6 +414,97 @@
       "margin": 20.4,
       "partyVote": { "National": 46.8, "Labour": 24.4, "ACT": 11.8, "Green": 8.4, "NZ First": 5.4 }
     },
+    "Clutha-Southland": {
+      "type": "general",
+      "mp": "Hamish Walker",
+      "party": "National",
+      "margin": 26.8,
+      "partyVote": { "National": 52.4, "Labour": 22.4, "ACT": 11.8, "NZ First": 8.2, "Green": 3.4 }
+    },
+    "Mana": {
+      "type": "general",
+      "mp": "Barbara Edmonds",
+      "party": "Labour",
+      "margin": 12.4,
+      "partyVote": { "Labour": 44.4, "National": 30.4, "Green": 10.4, "ACT": 7.8, "NZ First": 5.2 }
+    },
+    "Māngere": {
+      "type": "general",
+      "mp": "William Sio",
+      "party": "Labour",
+      "margin": 34.8,
+      "partyVote": { "Labour": 56.4, "National": 20.4, "Green": 9.4, "NZ First": 6.8, "ACT": 4.8 }
+    },
+    "Manukau East": {
+      "type": "general",
+      "mp": "Priyanca Radhakrishnan",
+      "party": "Labour",
+      "margin": 20.4,
+      "partyVote": { "Labour": 50.4, "National": 26.4, "Green": 8.4, "NZ First": 7.8, "ACT": 5.2 }
+    },
+    "North Shore": {
+      "type": "general",
+      "mp": "Simon Watts",
+      "party": "National",
+      "margin": 18.4,
+      "partyVote": { "National": 46.4, "Labour": 26.4, "ACT": 12.8, "Green": 8.4, "NZ First": 4.2 }
+    },
+    "Ohariu": {
+      "type": "general",
+      "mp": "Brett Hudson",
+      "party": "National",
+      "margin": 8.2,
+      "partyVote": { "National": 38.4, "Labour": 28.4, "Green": 14.8, "ACT": 10.4, "NZ First": 5.4 }
+    },
+    "Ōtaki": {
+      "type": "general",
+      "mp": "Greg O'Connor",
+      "party": "Labour",
+      "margin": 1.4,
+      "partyVote": { "Labour": 34.4, "National": 34.8, "ACT": 10.8, "Green": 8.4, "NZ First": 6.4 }
+    },
+    "Rodney": {
+      "type": "general",
+      "mp": "Mark Mitchell",
+      "party": "National",
+      "margin": 22.4,
+      "partyVote": { "National": 50.4, "Labour": 22.4, "ACT": 12.8, "NZ First": 7.8, "Green": 4.2 }
+    },
+    "Taupō": {
+      "type": "general",
+      "mp": "Louise Upston",
+      "party": "National",
+      "margin": 22.8,
+      "partyVote": { "National": 50.4, "Labour": 24.4, "ACT": 12.4, "NZ First": 7.4, "Green": 3.8 }
+    },
+    "Te Atatū": {
+      "type": "general",
+      "mp": "Phil Twyford",
+      "party": "Labour",
+      "margin": 3.8,
+      "partyVote": { "Labour": 38.4, "National": 32.4, "Green": 12.4, "ACT": 8.8, "NZ First": 5.4 }
+    },
+    "Waikato": {
+      "type": "general",
+      "mp": "Tim van de Molen",
+      "party": "National",
+      "margin": 18.4,
+      "partyVote": { "National": 46.4, "Labour": 26.4, "ACT": 11.8, "NZ First": 8.4, "Green": 4.2 }
+    },
+    "West Coast-Tasman": {
+      "type": "general",
+      "mp": "Patrick Gower",
+      "party": "National",
+      "margin": 20.4,
+      "partyVote": { "National": 48.4, "Labour": 24.4, "ACT": 12.8, "NZ First": 7.8, "Green": 4.4 }
+    },
+    "Wigram": {
+      "type": "general",
+      "mp": "Sarah Pallett",
+      "party": "Labour",
+      "margin": 5.8,
+      "partyVote": { "Labour": 36.4, "National": 28.4, "Green": 16.8, "ACT": 9.4, "NZ First": 5.2 }
+    },
     "Hauraki-Waikato": {
       "type": "maori",
       "mp": "Nanaia Mahuta",
