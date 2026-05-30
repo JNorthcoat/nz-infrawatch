@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NZ InfraWatch — Infrastructure Pipeline Tracker</title>
+  <meta name="description" content="Track New Zealand's infrastructure pipeline. See what's being built, where, and what's at risk if the government changes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script type="module" crossorigin src="/nz-infrawatch/assets/index-C1jhVQKJ.js"></script>
+  <link rel="stylesheet" crossorigin href="/nz-infrawatch/assets/index-8pssLbSj.css">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header id="hdr">
+  <div id="hdr-left">
+    <span id="logo">🗺 NZ InfraWatch</span>
+    <span class="vdiv"></span>
+    <span id="project-count">Loading…</span>
+  </div>
+  <nav id="hdr-nav">
+    <button class="hdr-btn" id="btn-electorates" onclick="toggleLayer('electorates')" title="Electorate boundaries">🗳 Electorates</button>
+    <button class="hdr-btn" id="btn-maori" onclick="toggleLayer('maori')" title="Māori electorates">Māori</button>
+    <button class="hdr-btn" id="btn-councils" onclick="toggleLayer('councils')" title="Council boundaries">🏛 Councils</button>
+    <button class="hdr-btn" id="btn-regions" onclick="toggleLayer('regions')" title="Regional councils">🌿 Regions</button>
+    <button class="hdr-btn" id="btn-marginal" onclick="toggleLayer('marginal')" title="Marginal seats (<5% margin)">⚡ Marginal</button>
+    <span class="vdiv"></span>
+    <button class="hdr-btn" id="btn-risk" onclick="toggleRiskView()" title="Highlight at-risk projects">🔴 At Risk</button>
+    <span class="vdiv"></span>
+    <button class="hdr-btn" onclick="openNews()" title="News feed">📰 News</button>
+    <button class="hdr-btn" onclick="openSources()" title="Sources & methodology">📋 Sources</button>
+  </nav>
+  <button id="hamburger" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
+</header>
+
+<!-- ── COUNCIL AMALGAMATION BANNER ── -->
+<div id="amalg-banner">
+  ⚠️ NZ local government is being restructured. Regional councils will be abolished before 2028 elections, and territorial authorities may be merged. Current council boundaries shown may change.
+  <a href="https://www.dia.govt.nz/local-water-done-well" target="_blank" rel="noopener">Learn more</a>
+  <button onclick="dismissBanner()" aria-label="Dismiss">✕</button>
+</div>
+
+<!-- ── BODY ── -->
+<div id="body">
+
+  <!-- LEFT SIDEBAR -->
+  <aside id="left">
+    <div id="sidebar-handle"></div>
+
+    <!-- Filter toolbar -->
+    <section class="sb-section">
+      <div class="sb-label">REGION</div>
+      <select id="filter-region" onchange="applyFilters()">
+        <option value="">All regions</option>
+        <option value="Northland">Northland</option>
+        <option value="Auckland">Auckland</option>
+        <option value="Waikato">Waikato</option>
+        <option value="Bay of Plenty">Bay of Plenty</option>
+        <option value="Gisborne">Gisborne</option>
+        <option value="Hawke's Bay">Hawke's Bay</option>
+        <option value="Taranaki">Taranaki</option>
+        <option value="Manawatū-Whanganui">Manawatū-Whanganui</option>
+        <option value="Wellington">Wellington</option>
+        <option value="Tasman">Tasman</option>
+        <option value="Nelson">Nelson</option>
+        <option value="Marlborough">Marlborough</option>
+        <option value="West Coast">West Coast</option>
+        <option value="Canterbury">Canterbury</option>
+        <option value="Otago">Otago</option>
+        <option value="Southland">Southland</option>
+      </select>
+    </section>
+
+    <section class="sb-section">
+      <div class="sb-label">SECTOR</div>
+      <div id="sector-btns" class="cat-row"></div>
+    </section>
+
+    <section class="sb-section">
+      <div class="sb-label">STATUS</div>
+      <div id="status-btns" class="cat-row"></div>
+    </section>
+
+    <section class="sb-section">
+      <div class="sb-label">MIN VALUE (NZ$M)</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="value-slider" min="0" max="5000" step="50" value="0" oninput="onValueSlider(this.value)" style="flex:1">
+        <span id="value-label" style="font-size:11px;font-family:var(--mono);min-width:50px">Any</span>
+      </div>
+    </section>
+
+    <section class="sb-section">
+      <div class="sb-label">ELECTION RISK</div>
+      <div id="risk-btns" class="cat-row"></div>
+    </section>
+
+    <section class="sb-section" style="padding-bottom:6px">
+      <input type="text" id="search-input" placeholder="Search projects…" oninput="onSearch(this.value)" autocomplete="off">
+    </section>
+
+    <!-- Project list -->
+    <div id="proj-list"></div>
+  </aside>
+
+  <!-- MAP -->
+  <div id="map-wrap">
+    <div id="map"></div>
+
+    <div id="elec-legend"></div>
+  </div>
+
+  <!-- RIGHT PANEL — project detail -->
+  <aside id="right">
+    <div id="detail-panel">
+      <div id="detail-placeholder">
+        <div style="font-size:32px;margin-bottom:8px">🗺</div>
+        <div style="font-size:13px;color:var(--dim)">Click a project on the map<br>or from the list to see details</div>
+      </div>
+      <div id="detail-content" style="display:none"></div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ── MOBILE SIDEBAR TOGGLE ── -->
+<div id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+<button id="sidebar-toggle" onclick="toggleMobileSidebar()">☰ Filters</button>
+
+<!-- ── MODALS ── -->
+<div id="modal-overlay" onclick="closeModal()" style="display:none"></div>
+
+<div id="news-modal" class="modal" style="display:none">
+  <div class="modal-inner">
+    <div class="modal-hdr">
+      <span>📰 Infrastructure News</span>
+      <button onclick="closeModal()">✕</button>
+    </div>
+    <div id="news-body" class="modal-body"></div>
+  </div>
+</div>
+
+<div id="sources-modal" class="modal" style="display:none">
+  <div class="modal-inner">
+    <div class="modal-hdr">
+      <span>📋 Sources &amp; Methodology</span>
+      <button onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>Data Sources</h3>
+      <p><strong>Infrastructure Projects:</strong> National Infrastructure Pipeline – produced by Te Waihanga (CC BY 4.0). Data current as at Q1 2026. <a href="https://tewaihanga.govt.nz/the-pipeline/downloadable-data" target="_blank" rel="noopener">tewaihanga.govt.nz</a></p>
+      <p><strong>Electoral Boundaries:</strong> Stats NZ Geographic Data Service — General Electoral District 2025, Māori Electoral District 2025. Crown Copyright.</p>
+      <p><strong>2023 Election Results:</strong> Electoral Commission NZ. <a href="https://elections.nz" target="_blank" rel="noopener">elections.nz</a></p>
+      <p><strong>Council Boundaries:</strong> Stats NZ — Territorial Authority 2024, Regional Council 2024. Crown Copyright.</p>
+      <h3>Methodology</h3>
+      <p><strong>Project markers</strong> are sized proportional to estimated cost. Location is the project's declared region centroid unless a precise location is known.</p>
+      <p><strong>Election risk tags</strong> are editorial assessments based on publicly available party policy, funding status, and project phase — they are not predictions. Projects are tagged Extreme, High, Medium, Low, or Safe based on vulnerability to government change.</p>
+      <p><strong>Council amalgamation:</strong> NZ announced regional council abolition and potential TA mergers in May 2026. Current boundaries shown reflect pre-restructure councils.</p>
+      <h3>Attribution</h3>
+      <p>National Infrastructure Pipeline data produced by <a href="https://tewaihanga.govt.nz" target="_blank" rel="noopener">Te Waihanga</a> under CC BY 4.0.</p>
+      <p>Electoral and boundary data © Crown Copyright — Stats NZ and Electoral Commission.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
