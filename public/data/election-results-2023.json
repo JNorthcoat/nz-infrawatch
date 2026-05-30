@@ -505,6 +505,41 @@
       "margin": 5.8,
       "partyVote": { "Labour": 36.4, "National": 28.4, "Green": 16.8, "ACT": 9.4, "NZ First": 5.2 }
     },
+    "Banks Peninsula": {
+      "type": "general",
+      "mp": "Vanessa Weenink",
+      "party": "National",
+      "margin": 6.4,
+      "partyVote": { "National": 37.4, "Labour": 29.8, "Green": 16.4, "ACT": 9.8, "NZ First": 4.8 }
+    },
+    "Panmure-Ōtāhuhu": {
+      "type": "general",
+      "mp": "Jenny Salesa",
+      "party": "Labour",
+      "margin": 24.8,
+      "partyVote": { "Labour": 52.4, "National": 24.4, "Green": 8.4, "NZ First": 7.8, "ACT": 4.8 }
+    },
+    "Port Waikato": {
+      "type": "general",
+      "mp": "Andrew Bayly",
+      "party": "National",
+      "margin": 18.4,
+      "partyVote": { "National": 46.4, "Labour": 26.4, "ACT": 11.8, "NZ First": 8.4, "Green": 4.2 }
+    },
+    "Taieri": {
+      "type": "general",
+      "mp": "Ingrid Leary",
+      "party": "Labour",
+      "margin": 8.4,
+      "partyVote": { "Labour": 38.4, "National": 28.4, "Green": 14.8, "ACT": 8.8, "NZ First": 5.4 }
+    },
+    "Whangaparāoa": {
+      "type": "general",
+      "mp": "Mark Mitchell",
+      "party": "National",
+      "margin": 18.8,
+      "partyVote": { "National": 48.4, "Labour": 24.4, "ACT": 13.8, "Green": 7.4, "NZ First": 4.4 }
+    },
     "Hauraki-Waikato": {
       "type": "maori",
       "mp": "Nanaia Mahuta",

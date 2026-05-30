@@ -460,18 +460,8 @@ function normElect(s) {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[–—]/g,'-').trim();
 }
 
-const ELECT_RENAME = {
-  'helensville':           'Kaipara ki Mahurangi',
-  'hunua':                 'Takanini',
-  'rimutaka':              'Remutaka',
-  'kaikoura':              'Kaikōura',
-  'otaki':                 'Ōtaki',
-  'rangitikei':            'Rangitīkei',
-  'tamaki':                'Tāmaki',
-  'taranaki-king country': 'Taranaki–King Country',
-  'whangarei':             'Whangārei',
-  'dunedin south':         'Dunedin',
-};
+// 2020 GeoJSON names already match 2023 election data — normElect() handles diacritic differences
+const ELECT_RENAME = {};
 
 async function renderElectorateLayer() {
   if (electorateLayer) { electorateLayer.remove(); electorateLayer = null; }
